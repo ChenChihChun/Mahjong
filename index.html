@@ -1,0 +1,1231 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>🀄 麻將 PK</title>
+<style>
+/* ===== RESET & BASE ===== */
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body { width: 100%; height: 100%; overflow: hidden; background: #1a4a1a; font-family: 'Noto Sans TC', sans-serif; color: #fff; }
+
+/* ===== SCREENS ===== */
+.screen { position: absolute; inset: 0; display: none; flex-direction: column; align-items: center; justify-content: center; }
+.screen.active { display: flex; }
+
+/* ===== HOME SCREEN ===== */
+#screen-home { background: radial-gradient(ellipse at center, #2d6a2d 0%, #0f2f0f 100%); }
+.home-title { font-size: 3.5rem; font-weight: 900; text-shadow: 0 0 30px rgba(255,220,50,0.8); margin-bottom: 0.3rem; }
+.home-subtitle { font-size: 1rem; color: #aed6ae; margin-bottom: 2.5rem; }
+.home-btn { width: 220px; padding: 16px 0; font-size: 1.2rem; font-weight: 700; border: none; border-radius: 12px; cursor: pointer; margin: 8px 0; transition: transform 0.1s, box-shadow 0.1s; }
+.home-btn:active { transform: scale(0.96); }
+.btn-primary { background: linear-gradient(135deg, #f5c518, #e8a000); color: #1a1a1a; box-shadow: 0 4px 20px rgba(245,197,24,0.5); }
+.btn-secondary { background: linear-gradient(135deg, #2a7a2a, #1a5a1a); color: #fff; border: 2px solid #4a9a4a; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+.join-row { display: flex; gap: 8px; margin: 8px 0; }
+.join-input { width: 130px; padding: 16px 12px; font-size: 1.3rem; font-weight: 700; text-align: center; letter-spacing: 0.2em; background: rgba(255,255,255,0.15); border: 2px solid rgba(255,255,255,0.3); border-radius: 12px; color: #fff; text-transform: uppercase; outline: none; }
+.join-input::placeholder { color: rgba(255,255,255,0.4); font-size: 1rem; letter-spacing: 0; }
+.join-input:focus { border-color: #f5c518; background: rgba(255,255,255,0.2); }
+.join-btn { flex: 1; padding: 16px; font-size: 1.1rem; font-weight: 700; background: linear-gradient(135deg, #3a8a3a, #2a6a2a); border: 2px solid #5aaa5a; border-radius: 12px; color: #fff; cursor: pointer; }
+.home-hint { font-size: 0.8rem; color: #6a9a6a; margin-top: 1.5rem; text-align: center; }
+
+/* ===== LOBBY SCREEN ===== */
+#screen-lobby { background: radial-gradient(ellipse at center, #2d5a8a 0%, #0f1f3f 100%); padding: 20px; justify-content: flex-start; padding-top: 40px; }
+.lobby-code-box { text-align: center; margin-bottom: 24px; }
+.lobby-code-label { font-size: 0.9rem; color: #9ab; margin-bottom: 4px; }
+.lobby-code { font-size: 4rem; font-weight: 900; letter-spacing: 0.3em; color: #f5c518; text-shadow: 0 0 20px rgba(245,197,24,0.6); }
+.lobby-copy-btn { margin-top: 8px; padding: 8px 20px; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); border-radius: 20px; color: #fff; font-size: 0.85rem; cursor: pointer; }
+.lobby-players { width: 100%; max-width: 400px; margin-bottom: 20px; }
+.lobby-player-slot { display: flex; align-items: center; gap: 12px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); border-radius: 12px; padding: 12px 16px; margin-bottom: 8px; min-height: 70px; }
+.lobby-player-slot.empty { border-style: dashed; opacity: 0.5; }
+.lobby-player-avatar { width: 46px; height: 46px; border-radius: 50%; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; font-size: 1.6rem; flex-shrink: 0; }
+.lobby-player-info { flex: 1; }
+.lobby-player-name { font-weight: 700; font-size: 1rem; }
+.lobby-player-sub { font-size: 0.75rem; color: #9ab; margin-top: 2px; }
+.lobby-player-ready-dot { width: 10px; height: 10px; border-radius: 50%; background: #4a4; flex-shrink: 0; }
+.lobby-player-ready-dot.not-ready { background: #a44; }
+.lobby-my-setup { width: 100%; max-width: 400px; background: rgba(255,255,255,0.08); border-radius: 12px; padding: 16px; margin-bottom: 16px; }
+.setup-label { font-size: 0.85rem; color: #9ab; margin-bottom: 8px; }
+.setup-name-input { width: 100%; padding: 10px 12px; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); border-radius: 8px; color: #fff; font-size: 1rem; outline: none; margin-bottom: 10px; }
+.setup-name-input:focus { border-color: #f5c518; }
+.avatar-select-row { display: flex; gap: 10px; flex-wrap: wrap; }
+.avatar-opt { width: 50px; height: 50px; border-radius: 50%; border: 3px solid transparent; cursor: pointer; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; transition: border-color 0.2s; }
+.avatar-opt.selected { border-color: #f5c518; }
+.lobby-start-btn { width: 100%; max-width: 400px; padding: 16px; font-size: 1.2rem; font-weight: 700; background: linear-gradient(135deg, #f5c518, #e8a000); color: #1a1a1a; border: none; border-radius: 12px; cursor: pointer; opacity: 0.4; transition: opacity 0.3s; }
+.lobby-start-btn.enabled { opacity: 1; }
+.lobby-ready-btn { width: 100%; max-width: 400px; padding: 16px; font-size: 1.1rem; font-weight: 700; background: linear-gradient(135deg, #2a8a2a, #1a6a1a); color: #fff; border: 2px solid #4aaa4a; border-radius: 12px; cursor: pointer; margin-bottom: 10px; }
+.lobby-back-btn { background: none; border: none; color: #9ab; font-size: 0.9rem; cursor: pointer; margin-top: 8px; }
+
+/* ===== GAME SCREEN ===== */
+#screen-game { background: #1a5a1a; padding: 0; justify-content: flex-start; }
+.game-wrap { width: 100%; height: 100%; display: grid; grid-template-rows: 1fr auto; }
+.game-board { position: relative; flex: 1; overflow: hidden; }
+
+/* Avatar corners */
+.avatar-corner { position: absolute; display: flex; flex-direction: column; align-items: center; gap: 4px; z-index: 10; }
+.avatar-corner.p-top-left  { top: 4px; left: 4px; }
+.avatar-corner.p-top-right { top: 4px; right: 4px; }
+.avatar-corner.p-bot-left  { bottom: 165px; left: 4px; }
+.avatar-corner.p-bot-right { bottom: 165px; right: 4px; }
+.avatar-face { width: 80px; height: 80px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.4); background: #222; display: flex; align-items: center; justify-content: center; font-size: 2.2rem; }
+.avatar-name-lbl { font-size: 0.7rem; font-weight: 700; text-shadow: 0 1px 3px #000; max-width: 80px; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.avatar-score-lbl { font-size: 0.65rem; color: #f5c518; }
+
+/* Discard zones */
+.discard-area { position: absolute; inset: 100px 100px 185px 100px; display: grid; grid-template-areas: ". top ." "left center right" ". bot ."; grid-template-columns: 1fr 2fr 1fr; grid-template-rows: 1fr 2fr 1fr; gap: 4px; }
+.discard-zone { display: flex; flex-wrap: wrap; align-content: flex-start; gap: 2px; padding: 4px; border-radius: 6px; background: rgba(0,0,0,0.1); }
+.dz-top    { grid-area: top; }
+.dz-left   { grid-area: left; }
+.dz-right  { grid-area: right; }
+.dz-bot    { grid-area: bot; }
+.dz-center { grid-area: center; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 4px; }
+
+/* Tile styling */
+.tile { display: inline-flex; align-items: center; justify-content: center; background: linear-gradient(145deg, #fffff0, #e8e8d0); color: #222; border-radius: 4px; border: 1px solid rgba(0,0,0,0.3); box-shadow: 0 2px 4px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.8); font-weight: 700; cursor: pointer; user-select: none; transition: transform 0.12s, box-shadow 0.12s; }
+.tile.small  { width: 22px; height: 30px; font-size: 10px; border-radius: 3px; }
+.tile.medium { width: 34px; height: 46px; font-size: 15px; border-radius: 5px; }
+.tile.large  { width: 44px; height: 60px; font-size: 19px; border-radius: 6px; }
+.tile.selected { transform: translateY(-10px); box-shadow: 0 8px 16px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.8); border-color: #f5c518; }
+.tile.flower { background: linear-gradient(145deg, #fff8e0, #f0e0a0); }
+.tile.discard-last { outline: 2px solid #f5c518; outline-offset: 1px; }
+.suit-m { color: #c00; }
+.suit-p { color: #090; }
+.suit-s { color: #009; }
+.suit-z { color: #550; }
+.suit-f { color: #8a5a00; }
+
+/* Hand area */
+.hand-area { background: rgba(0,0,0,0.4); border-top: 2px solid rgba(255,255,255,0.15); padding: 8px 8px 4px; }
+.hand-tiles { display: flex; flex-wrap: nowrap; gap: 3px; overflow-x: auto; padding-bottom: 4px; min-height: 68px; align-items: flex-end; scrollbar-width: none; }
+.hand-tiles::-webkit-scrollbar { display: none; }
+.hand-melds { display: flex; gap: 6px; margin-top: 4px; flex-wrap: wrap; }
+.meld-group { display: flex; gap: 2px; background: rgba(255,255,255,0.1); border-radius: 4px; padding: 3px 3px 1px; align-items: flex-end; }
+.meld-type-lbl { font-size: 0.55rem; color: #aaa; display: block; text-align: center; }
+.hand-flowers { display: flex; gap: 2px; margin-top: 4px; }
+
+/* Action buttons */
+.action-bar { display: flex; gap: 6px; padding: 6px 8px 8px; background: rgba(0,0,0,0.5); flex-wrap: wrap; }
+.action-btn { flex: 1; min-width: 55px; padding: 10px 4px; font-size: 1rem; font-weight: 700; border: none; border-radius: 8px; cursor: pointer; transition: transform 0.1s, opacity 0.1s; }
+.action-btn:active { transform: scale(0.95); }
+.action-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+.btn-pong    { background: linear-gradient(135deg, #4a90d9, #2a70b9); color: #fff; }
+.btn-chow    { background: linear-gradient(135deg, #5ab85a, #3a983a); color: #fff; }
+.btn-kong    { background: linear-gradient(135deg, #d9844a, #b96030); color: #fff; }
+.btn-win     { background: linear-gradient(135deg, #f5c518, #e8a000); color: #1a1a1a; }
+.btn-discard { background: linear-gradient(135deg, #8a4a8a, #6a2a6a); color: #fff; }
+.btn-skip    { background: rgba(255,255,255,0.15); color: #ccc; border: 1px solid rgba(255,255,255,0.2); }
+
+/* Overlays */
+.turn-indicator { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(245,197,24,0.9); color: #1a1a1a; font-weight: 700; font-size: 0.85rem; padding: 6px 16px; border-radius: 20px; pointer-events: none; z-index: 20; transition: opacity 0.3s; }
+.action-timer { position: absolute; top: 8px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 8px; background: rgba(0,0,0,0.7); border-radius: 20px; padding: 6px 16px; z-index: 25; }
+.timer-bar-wrap { width: 100px; height: 6px; background: rgba(255,255,255,0.2); border-radius: 3px; overflow: hidden; }
+.timer-bar { height: 100%; background: #f5c518; border-radius: 3px; transition: width 0.1s linear; }
+.timer-text { font-size: 0.9rem; font-weight: 700; color: #f5c518; min-width: 24px; text-align: center; }
+.action-notif { position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.8); color: #f5c518; font-size: 2rem; font-weight: 900; padding: 16px 32px; border-radius: 16px; z-index: 30; pointer-events: none; opacity: 0; transition: opacity 0.3s; }
+.action-notif.show { opacity: 1; }
+
+/* WIN screen */
+#screen-win { background: rgba(0,0,0,0.85); z-index: 100; }
+.win-box { background: linear-gradient(135deg, #2d5a2d, #1a3a1a); border: 2px solid #f5c518; border-radius: 20px; padding: 32px 24px; text-align: center; max-width: 340px; width: 90%; }
+.win-title { font-size: 2rem; font-weight: 900; color: #f5c518; margin-bottom: 8px; }
+.win-player-lbl { font-size: 1.2rem; margin-bottom: 16px; }
+.win-hand { display: flex; flex-wrap: wrap; gap: 4px; justify-content: center; margin-bottom: 16px; }
+.win-tai-lbl { font-size: 1.5rem; font-weight: 900; color: #f5c518; margin-bottom: 8px; }
+.win-breakdown { font-size: 0.85rem; color: #ccc; margin-bottom: 16px; line-height: 1.6; }
+.win-again-btn { width: 100%; padding: 14px; font-size: 1.1rem; font-weight: 700; background: linear-gradient(135deg, #f5c518, #e8a000); color: #1a1a1a; border: none; border-radius: 12px; cursor: pointer; }
+
+/* Toast */
+.toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.85); color: #fff; padding: 10px 20px; border-radius: 20px; font-size: 0.9rem; z-index: 999; pointer-events: none; opacity: 0; transition: opacity 0.3s; white-space: nowrap; }
+.toast.show { opacity: 1; }
+
+/* Loading */
+#loading { position: fixed; inset: 0; background: #0f2f0f; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 1000; }
+.loading-logo { font-size: 3rem; margin-bottom: 16px; }
+.loading-text { color: #aed6ae; font-size: 1rem; margin-bottom: 20px; }
+.loading-bar-wrap { width: 200px; height: 4px; background: rgba(255,255,255,0.2); border-radius: 2px; overflow: hidden; }
+.loading-bar { height: 100%; background: #f5c518; border-radius: 2px; transition: width 0.3s; }
+
+/* Chow selector */
+.chow-selector { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; z-index: 50; }
+.chow-box { background: #2a5a2a; border: 2px solid #f5c518; border-radius: 16px; padding: 20px; text-align: center; }
+.chow-title { margin-bottom: 12px; font-size: 1rem; color: #f5c518; }
+.chow-option { display: flex; gap: 4px; justify-content: center; margin: 8px 0; background: rgba(255,255,255,0.1); border-radius: 8px; padding: 8px; cursor: pointer; border: 2px solid transparent; }
+.chow-option:hover { border-color: #f5c518; }
+.chow-cancel { margin-top: 12px; background: rgba(255,255,255,0.1); border: none; color: #ccc; padding: 8px 20px; border-radius: 8px; cursor: pointer; font-size: 0.9rem; }
+
+/* Center info labels */
+.center-wind-lbl  { font-size: 1.8rem; }
+.center-round-lbl { font-size: 0.75rem; color: #aaa; }
+.center-wall-lbl  { font-size: 0.85rem; color: #f5c518; }
+
+@media (min-width: 600px) {
+  .tile.large { width: 50px; height: 68px; font-size: 22px; }
+  .avatar-face { width: 100px; height: 100px; font-size: 2.8rem; }
+}
+</style>
+</head>
+<body>
+
+<!-- Loading -->
+<div id="loading">
+  <div class="loading-logo">🀄</div>
+  <div class="loading-text" id="loading-text">麻將 PK 載入中…</div>
+  <div class="loading-bar-wrap"><div class="loading-bar" id="loading-bar" style="width:0%"></div></div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<!-- ===== HOME SCREEN ===== -->
+<div class="screen" id="screen-home">
+  <div class="home-title">🀄 麻將 PK</div>
+  <div class="home-subtitle">台灣麻將 · 四人連線對戰</div>
+  <button class="home-btn btn-primary" id="btn-create">建立房間</button>
+  <div class="join-row">
+    <input class="join-input" id="join-code-input" maxlength="4" placeholder="房間代碼" autocomplete="off" spellcheck="false">
+    <button class="join-btn" id="btn-join">加入</button>
+  </div>
+  <div class="home-hint">支援任何裝置，用瀏覽器開啟即可</div>
+</div>
+
+<!-- ===== LOBBY SCREEN ===== -->
+<div class="screen" id="screen-lobby">
+  <div class="lobby-code-box">
+    <div class="lobby-code-label">房間代碼</div>
+    <div class="lobby-code" id="lobby-code">----</div>
+    <button class="lobby-copy-btn" id="btn-copy-link">📋 複製邀請連結</button>
+  </div>
+  <div class="lobby-players" id="lobby-players"></div>
+  <div class="lobby-my-setup">
+    <div class="setup-label">我的暱稱</div>
+    <input class="setup-name-input" id="my-name-input" maxlength="10" placeholder="輸入暱稱…">
+    <div class="setup-label">選擇頭像</div>
+    <div class="avatar-select-row" id="avatar-select-row">
+      <div class="avatar-opt selected" data-avatar="0">🐲</div>
+      <div class="avatar-opt" data-avatar="1">🐯</div>
+      <div class="avatar-opt" data-avatar="2">🦊</div>
+      <div class="avatar-opt" data-avatar="3">🐼</div>
+    </div>
+  </div>
+  <button class="lobby-ready-btn" id="btn-ready">✅ 準備好了</button>
+  <button class="lobby-start-btn" id="btn-start" style="display:none" disabled>🀄 開始遊戲</button>
+  <button class="lobby-back-btn" id="btn-back-home">← 返回</button>
+</div>
+
+<!-- ===== GAME SCREEN ===== -->
+<div class="screen" id="screen-game">
+  <div class="game-wrap">
+    <div class="game-board" id="game-board">
+      <!-- Avatar corners -->
+      <div class="avatar-corner p-top-left"  id="corner-0">
+        <div class="avatar-face" id="avatar-face-0"></div>
+        <div class="avatar-name-lbl" id="avatar-name-0">—</div>
+        <div class="avatar-score-lbl" id="avatar-score-0">0分</div>
+      </div>
+      <div class="avatar-corner p-top-right" id="corner-1">
+        <div class="avatar-face" id="avatar-face-1"></div>
+        <div class="avatar-name-lbl" id="avatar-name-1">—</div>
+        <div class="avatar-score-lbl" id="avatar-score-1">0分</div>
+      </div>
+      <div class="avatar-corner p-bot-left" id="corner-2">
+        <div class="avatar-face" id="avatar-face-2"></div>
+        <div class="avatar-name-lbl" id="avatar-name-2">—</div>
+        <div class="avatar-score-lbl" id="avatar-score-2">0分</div>
+      </div>
+      <div class="avatar-corner p-bot-right" id="corner-3">
+        <div class="avatar-face" id="avatar-face-3"></div>
+        <div class="avatar-name-lbl" id="avatar-name-3">—</div>
+        <div class="avatar-score-lbl" id="avatar-score-3">0分</div>
+      </div>
+
+      <!-- Discard area -->
+      <div class="discard-area">
+        <div class="discard-zone dz-top"    id="dz-top"></div>
+        <div class="discard-zone dz-left"   id="dz-left"></div>
+        <div class="discard-zone dz-center">
+          <div class="center-wind-lbl"  id="center-wind">東</div>
+          <div class="center-round-lbl" id="center-round">第一局</div>
+          <div class="center-wall-lbl"  id="center-wall">牌牆: --</div>
+        </div>
+        <div class="discard-zone dz-right"  id="dz-right"></div>
+        <div class="discard-zone dz-bot"    id="dz-bot"></div>
+      </div>
+
+      <!-- Overlays -->
+      <div class="turn-indicator" id="turn-indicator" style="opacity:0">輪到你了</div>
+      <div class="action-timer" id="action-timer" style="display:none">
+        <div class="timer-bar-wrap"><div class="timer-bar" id="timer-bar"></div></div>
+        <div class="timer-text" id="timer-text">8</div>
+      </div>
+      <div class="action-notif" id="action-notif"></div>
+    </div>
+
+    <!-- Hand + actions -->
+    <div>
+      <div class="hand-area">
+        <div class="hand-tiles" id="hand-tiles"></div>
+        <div style="display:flex;gap:8px;align-items:flex-start;flex-wrap:wrap;">
+          <div class="hand-melds"   id="hand-melds"></div>
+          <div class="hand-flowers" id="hand-flowers"></div>
+        </div>
+      </div>
+      <div class="action-bar">
+        <button class="action-btn btn-pong" id="btn-pong"     disabled>碰</button>
+        <button class="action-btn btn-chow" id="btn-chow"     disabled>吃</button>
+        <button class="action-btn btn-kong" id="btn-kong"     disabled>槓</button>
+        <button class="action-btn btn-win"  id="btn-win-claim"disabled>胡</button>
+        <button class="action-btn btn-discard" id="btn-discard" disabled>出牌</button>
+        <button class="action-btn btn-skip" id="btn-skip"     disabled>過</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== WIN SCREEN ===== -->
+<div class="screen" id="screen-win">
+  <div class="win-box">
+    <div class="win-title" id="win-title">🎉 胡牌！</div>
+    <div class="win-player-lbl" id="win-player-lbl"></div>
+    <div class="win-hand" id="win-hand"></div>
+    <div class="win-tai-lbl" id="win-tai-lbl"></div>
+    <div class="win-breakdown" id="win-breakdown"></div>
+    <button class="win-again-btn" id="btn-play-again">再來一局 🀄</button>
+  </div>
+</div>
+
+<!-- Chow selector -->
+<div class="chow-selector" id="chow-selector" style="display:none">
+  <div class="chow-box">
+    <div class="chow-title">選擇要吃的牌組</div>
+    <div id="chow-options"></div>
+    <button class="chow-cancel" id="chow-cancel">取消</button>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getDatabase, ref, set, get, update, onValue, off, remove }
+  from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js';
+
+// ============================================================
+// FIREBASE CONFIG — replace before deploy
+// ============================================================
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT.firebaseapp.com",
+  databaseURL: "https://YOUR_PROJECT-default-rtdb.firebaseio.com",
+  projectId: "YOUR_PROJECT",
+  storageBucket: "YOUR_PROJECT.appspot.com",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId: "YOUR_APP_ID"
+};
+
+const fbApp = initializeApp(firebaseConfig);
+const db    = getDatabase(fbApp);
+
+// ============================================================
+// CONSTANTS
+// ============================================================
+const PLAYER_IDS    = ['p1','p2','p3','p4'];
+const WINDS         = ['東','南','西','北'];
+const EMOJI_AVATARS = ['🐲','🐯','🦊','🐼'];
+const SUIT_LABELS   = { m:'萬', p:'筒', s:'索' };
+const WIND_LABELS   = { '1z':'東','2z':'南','3z':'西','4z':'北','5z':'白','6z':'發','7z':'中' };
+const FLOWER_LABELS = ['','梅','蘭','菊','竹','春','夏','秋','冬'];
+
+// ============================================================
+// STATE
+// ============================================================
+let myPlayerId = null;
+let myName     = '玩家';
+let myAvatarIdx = 0;
+let roomCode   = null;
+let isHost     = false;
+let gameState  = null;
+let roomPlayers = {};
+let dbListeners = [];   // [ {ref, fn} ] for cleanup
+let selectedTileIdx = null;
+let actionTimerInterval = null;
+let scores = { p1:0, p2:0, p3:0, p4:0 };
+let pendingChowOptions = [];
+
+// ============================================================
+// DOM UTILS — safe, no innerHTML with user data
+// ============================================================
+function el(id) { return document.getElementById(id); }
+
+function txt(id, text) { el(id).textContent = text; }
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  el(id).classList.add('active');
+}
+
+let toastTimer = null;
+function showToast(msg, ms=2500) {
+  const t = el('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), ms);
+}
+
+function setLoadingPct(pct) {
+  el('loading-bar').style.width = pct + '%';
+  if (pct >= 100) setTimeout(() => { el('loading').style.display = 'none'; }, 400);
+}
+
+function showNotif(text) {
+  const n = el('action-notif');
+  n.textContent = text;
+  n.classList.add('show');
+  setTimeout(() => n.classList.remove('show'), 2000);
+}
+
+// ============================================================
+// TILE UTILS
+// ============================================================
+function isFlower(t) { return typeof t === 'string' && t[0] === 'f'; }
+
+function tileLabel(t) {
+  if (!t) return '?';
+  if (isFlower(t)) return FLOWER_LABELS[parseInt(t[1])] || t;
+  if (t[1] === 'z') return WIND_LABELS[t] || t;
+  return t[0] + (SUIT_LABELS[t[1]] || '');
+}
+
+function tileSuitClass(t) {
+  if (!t) return '';
+  if (isFlower(t)) return 'suit-f';
+  const s = t[1];
+  return s === 'm' ? 'suit-m' : s === 'p' ? 'suit-p' : s === 's' ? 'suit-s' : 'suit-z';
+}
+
+function makeTileEl(t, size = 'medium', extra = '') {
+  const div = document.createElement('div');
+  div.className = ['tile', size, isFlower(t) ? 'flower' : '', extra].filter(Boolean).join(' ');
+  div.dataset.tile = t;
+  const span = document.createElement('span');
+  span.className = tileSuitClass(t);
+  span.textContent = tileLabel(t);
+  div.appendChild(span);
+  return div;
+}
+
+function sortTiles(tiles) {
+  const suitOrder = { m: 0, p: 100, s: 200, z: 300, f: 400 };
+  return [...tiles].sort((a, b) => {
+    const oa = (suitOrder[a[1]] || 400) + parseInt(a[0]);
+    const ob = (suitOrder[b[1]] || 400) + parseInt(b[0]);
+    return oa - ob;
+  });
+}
+
+// ============================================================
+// WALL BUILDING
+// ============================================================
+function buildWall() {
+  const tiles = [];
+  ['m','p','s'].forEach(suit => {
+    for (let n = 1; n <= 9; n++)
+      for (let i = 0; i < 4; i++) tiles.push(`${n}${suit}`);
+  });
+  for (let n = 1; n <= 7; n++)
+    for (let i = 0; i < 4; i++) tiles.push(`${n}z`);
+  for (let n = 1; n <= 8; n++) tiles.push(`f${n}`);
+  for (let i = tiles.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [tiles[i], tiles[j]] = [tiles[j], tiles[i]];
+  }
+  return tiles;
+}
+
+// ============================================================
+// WIN DETECTION
+// ============================================================
+function canWin(hand, melds) {
+  const setsNeeded = 4 - (melds || []).length;
+  if (hand.length !== setsNeeded * 3 + 2) return false;
+  return _checkWin(sortTiles(hand), setsNeeded);
+}
+
+function _checkWin(sorted, setsNeeded) {
+  if (setsNeeded === 0) return sorted.length === 2 && sorted[0] === sorted[1];
+  // Try each tile as the pair
+  for (let i = 0; i < sorted.length - 1; i++) {
+    if (i > 0 && sorted[i] === sorted[i - 1]) continue;
+    if (sorted[i] === sorted[i + 1]) {
+      const rest = sorted.filter((_, j) => j !== i && j !== i + 1);
+      if (_checkSets(rest, setsNeeded)) return true;
+    }
+  }
+  return false;
+}
+
+function _checkSets(sorted, count) {
+  if (count === 0) return sorted.length === 0;
+  if (sorted.length < 3) return false;
+  const first = sorted[0];
+  const rest  = sorted.slice(1);
+  // Try pung
+  if (rest[0] === first && rest[1] === first) {
+    if (_checkSets(sorted.slice(3), count - 1)) return true;
+  }
+  // Try sequence
+  const suit = first[1];
+  if (suit !== 'z' && suit !== 'f') {
+    const n = parseInt(first[0]);
+    const t2 = `${n + 1}${suit}`, t3 = `${n + 2}${suit}`;
+    const i2 = rest.indexOf(t2), i3 = rest.indexOf(t3);
+    if (i2 !== -1 && i3 !== -1) {
+      const remaining = rest.filter((_, i) => i !== i2 && i !== (i3 > i2 ? i3 : i3));
+      // rebuild without first, t2, t3 properly
+      const copy = [...sorted];
+      copy.splice(copy.indexOf(first), 1);
+      copy.splice(copy.indexOf(t2), 1);
+      copy.splice(copy.indexOf(t3), 1);
+      if (_checkSets(copy, count - 1)) return true;
+    }
+  }
+  return false;
+}
+
+// ============================================================
+// CLAIM CHECKS
+// ============================================================
+function canPong(hand, tile) {
+  if (!tile || isFlower(tile)) return false;
+  return hand.filter(t => t === tile).length >= 2;
+}
+
+function canChow(hand, tile, discardedBy) {
+  const myAbsSeat = PLAYER_IDS.indexOf(myPlayerId);
+  const leftPid   = PLAYER_IDS[(myAbsSeat + 3) % 4];
+  if (discardedBy !== leftPid) return [];
+  if (!tile || isFlower(tile) || tile[1] === 'z') return [];
+  const suit = tile[1], n = parseInt(tile[0]);
+  const opts = [];
+  for (let start = n - 2; start <= n; start++) {
+    if (start < 1 || start + 2 > 9) continue;
+    const needed = [start, start + 1, start + 2].filter(x => x !== n).map(x => `${x}${suit}`);
+    if (needed.every(t => hand.includes(t))) opts.push(needed);
+  }
+  return opts;
+}
+
+function getKongOptions(hand, tile, melds) {
+  const opts = [];
+  if (tile && hand.filter(t => t === tile).length === 3)
+    opts.push({ type: '明槓', tile });
+  const cnt = {};
+  hand.forEach(t => { cnt[t] = (cnt[t] || 0) + 1; });
+  Object.entries(cnt).forEach(([t, c]) => { if (c === 4) opts.push({ type: '暗槓', tile: t }); });
+  (melds || []).forEach(m => {
+    if (m.type === '碰' && hand.includes(m.tiles[0]))
+      opts.push({ type: '加槓', tile: m.tiles[0] });
+  });
+  return opts;
+}
+
+// ============================================================
+// TAI CALCULATION
+// ============================================================
+function calcTai(hand, melds, flowers, isSelfDraw, isDealer, wallRemaining, isFirstDraw) {
+  if (isFirstDraw && isSelfDraw) {
+    const label = isDealer ? '天胡' : '地胡';
+    return { tai: isDealer ? 16 : 8, breakdown: [label] };
+  }
+  let tai = 0;
+  const breakdown = [];
+  const allTiles  = [...hand, ...(melds || []).flatMap(m => m.tiles)];
+
+  if (isSelfDraw)                                   { tai++; breakdown.push('自摸 +1台'); }
+  if (!isSelfDraw && (melds || []).filter(m => m.type !== '暗槓').length === 0)
+                                                    { tai++; breakdown.push('門清 +1台'); }
+  if (wallRemaining === 0)
+    { tai++; breakdown.push(isSelfDraw ? '海底撈月 +1台' : '河底撈魚 +1台'); }
+
+  const nonHonor = allTiles.filter(t => !isFlower(t) && t[1] !== 'z');
+  const honor    = allTiles.filter(t => !isFlower(t) && t[1] === 'z');
+  const suits    = new Set(nonHonor.map(t => t[1]));
+
+  if (suits.size === 0 && honor.length > 0)      { tai += 6; breakdown.push('字一色 +6台'); }
+  else if (suits.size === 1 && honor.length === 0){ tai += 5; breakdown.push('清一色 +5台'); }
+  else if (suits.size === 1)                      { tai += 3; breakdown.push('混一色 +3台'); }
+
+  ['5z','6z','7z'].forEach(d => {
+    if (allTiles.filter(t => t === d).length >= 3)
+      { tai++; breakdown.push(`三元(${tileLabel(d)}) +1台`); }
+  });
+
+  const wc = ['1z','2z','3z','4z'].map(w => allTiles.filter(t => t === w).length);
+  const wTrip = wc.filter(c => c >= 3).length;
+  const wPair = wc.filter(c => c === 2).length;
+  if (wTrip === 4)              { tai += 8; breakdown.push('大四喜 +8台'); }
+  else if (wTrip === 3 && wPair === 1) { tai += 5; breakdown.push('小四喜 +5台'); }
+
+  if (tai === 0) breakdown.push('平胡 0台');
+  return { tai, breakdown };
+}
+
+// ============================================================
+// FIREBASE HELPERS
+// ============================================================
+function addListener(dbRef, fn) {
+  onValue(dbRef, fn);
+  dbListeners.push({ dbRef, fn });
+}
+
+function clearListeners() {
+  dbListeners.forEach(({ dbRef, fn }) => off(dbRef, 'value', fn));
+  dbListeners = [];
+}
+
+function nextPlayer(pid) {
+  return PLAYER_IDS[(PLAYER_IDS.indexOf(pid) + 1) % 4];
+}
+
+// ============================================================
+// GAME ACTIONS
+// ============================================================
+async function fireDraw() {
+  if (!gameState) return;
+  const wall = gameState.wall;
+  let idx    = gameState.wallIndex;
+  if (idx >= wall.length) { showToast('牌牆已摸完！'); return; }
+
+  const hand    = [...(gameState.hands[myPlayerId] || [])];
+  const flowers = [...(gameState.flowers[myPlayerId] || [])];
+  let tile = wall[idx++];
+  while (isFlower(tile) && idx < wall.length) { flowers.push(tile); tile = wall[idx++]; }
+  if (isFlower(tile)) { showToast('無法摸牌'); return; }
+  hand.push(tile);
+
+  await update(ref(db, `rooms/${roomCode}/game`), {
+    [`hands/${myPlayerId}`]: hand,
+    [`flowers/${myPlayerId}`]: flowers,
+    wallIndex: idx,
+  });
+}
+
+async function fireDiscard() {
+  if (selectedTileIdx === null) { showToast('請先選擇要出的牌'); return; }
+  const hand = sortTiles(gameState.hands[myPlayerId] || []);
+  const tile  = hand[selectedTileIdx];
+  if (!tile) return;
+  const newHand = hand.filter((_, i) => i !== selectedTileIdx);
+
+  await update(ref(db, `rooms/${roomCode}/game`), {
+    [`hands/${myPlayerId}`]: newHand,
+    [`discards/${myPlayerId}`]: [...(gameState.discards[myPlayerId] || []), tile],
+    lastDiscard: { tile, by: myPlayerId },
+    currentTurn: nextPlayer(myPlayerId),
+    pendingAction: null,
+  });
+  selectedTileIdx = null;
+}
+
+async function firePong() {
+  const tile = gameState?.lastDiscard?.tile;
+  if (!tile) return;
+  const hand = [...(gameState.hands[myPlayerId] || [])];
+  let removed = 0;
+  const newHand = hand.filter(t => (t === tile && removed < 2) ? (removed++, false) : true);
+  const myMelds = [...(gameState.melds[myPlayerId] || []), { type:'碰', tiles:[tile,tile,tile] }];
+  await update(ref(db, `rooms/${roomCode}/game`), {
+    [`hands/${myPlayerId}`]: newHand,
+    [`melds/${myPlayerId}`]: myMelds,
+    currentTurn: myPlayerId,
+    lastDiscard: null,
+    pendingAction: null,
+  });
+  showNotif('碰！');
+}
+
+async function fireChow(otherTwo) {
+  const tile = gameState?.lastDiscard?.tile;
+  if (!tile) return;
+  const hand = [...(gameState.hands[myPlayerId] || [])];
+  let removals = [...otherTwo];
+  const newHand = hand.filter(t => {
+    const i = removals.indexOf(t);
+    if (i !== -1) { removals.splice(i, 1); return false; }
+    return true;
+  });
+  const meldTiles = sortTiles([tile, ...otherTwo]);
+  const myMelds = [...(gameState.melds[myPlayerId] || []), { type:'吃', tiles: meldTiles }];
+  await update(ref(db, `rooms/${roomCode}/game`), {
+    [`hands/${myPlayerId}`]: newHand,
+    [`melds/${myPlayerId}`]: myMelds,
+    currentTurn: myPlayerId,
+    lastDiscard: null,
+    pendingAction: null,
+  });
+  showNotif('吃！');
+}
+
+async function fireKong(kongOpt) {
+  const tile = kongOpt.tile;
+  let hand   = [...(gameState.hands[myPlayerId] || [])];
+  let melds  = [...(gameState.melds[myPlayerId] || [])];
+  let removeCount = kongOpt.type === '明槓' ? 3 : kongOpt.type === '暗槓' ? 4 : 1;
+
+  hand = hand.filter(t => {
+    if (t === tile && removeCount > 0) { removeCount--; return false; }
+    return true;
+  });
+
+  if (kongOpt.type === '明槓' || kongOpt.type === '暗槓') {
+    melds.push({ type: kongOpt.type, tiles: [tile, tile, tile, tile] });
+  } else {
+    const idx = melds.findIndex(m => m.type === '碰' && m.tiles[0] === tile);
+    if (idx !== -1) melds[idx] = { type: '加槓', tiles: [tile, tile, tile, tile] };
+  }
+
+  // Draw replacement tile
+  let wallIdx = gameState.wallIndex;
+  const wall  = gameState.wall;
+  const flowers = [...(gameState.flowers[myPlayerId] || [])];
+  let drawn = wall[wallIdx++];
+  while (drawn && isFlower(drawn) && wallIdx < wall.length) { flowers.push(drawn); drawn = wall[wallIdx++]; }
+  if (drawn && !isFlower(drawn)) hand.push(drawn);
+
+  await update(ref(db, `rooms/${roomCode}/game`), {
+    [`hands/${myPlayerId}`]: hand,
+    [`melds/${myPlayerId}`]: melds,
+    [`flowers/${myPlayerId}`]: flowers,
+    wallIndex: wallIdx,
+    currentTurn: myPlayerId,
+    lastDiscard: null,
+    pendingAction: null,
+  });
+  showNotif('槓！');
+}
+
+async function fireSkip() {
+  await update(ref(db, `rooms/${roomCode}/game`), {
+    pendingAction: null,
+    lastDiscard: null,
+  });
+}
+
+async function fireDeclareWin() {
+  if (!gameState) return;
+  const hand    = gameState.hands[myPlayerId] || [];
+  const myMelds = gameState.melds[myPlayerId] || [];
+  const myFlows = gameState.flowers[myPlayerId] || [];
+  const isMyTurn = gameState.currentTurn === myPlayerId;
+  const lastTile = gameState.lastDiscard?.tile;
+  const fullHand = isMyTurn ? hand : [...hand, lastTile];
+
+  if (!canWin(fullHand, myMelds)) { showToast('牌型不符合胡牌條件'); return; }
+
+  const wallLeft = gameState.wall.length - (gameState.wallIndex || 0);
+  const isDealer = gameState.dealer === myPlayerId;
+  const { tai, breakdown } = calcTai(fullHand, myMelds, myFlows, isMyTurn, isDealer, wallLeft, false);
+  if (tai < 1) { showToast('未達最低1台，無法胡牌'); return; }
+
+  await update(ref(db, `rooms/${roomCode}/game`), {
+    status: 'won',
+    winner: myPlayerId,
+    winInfo: {
+      tai,
+      breakdown: breakdown.join('，'),
+      isSelfDraw: isMyTurn,
+      hand: fullHand,
+      discarder: isMyTurn ? null : gameState.lastDiscard?.by,
+    },
+  });
+}
+
+// ============================================================
+// TIMER
+// ============================================================
+function startActionTimer(secs, onExpire) {
+  stopActionTimer();
+  el('action-timer').style.display = 'flex';
+  el('timer-bar').style.width = '100%';
+  let rem = secs;
+  txt('timer-text', rem);
+  actionTimerInterval = setInterval(() => {
+    rem -= 0.1;
+    el('timer-bar').style.width = Math.max(0, (rem / secs) * 100) + '%';
+    el('timer-text').textContent = Math.ceil(rem);
+    if (rem <= 0) { stopActionTimer(); onExpire(); }
+  }, 100);
+}
+
+function stopActionTimer() {
+  clearInterval(actionTimerInterval);
+  actionTimerInterval = null;
+  el('action-timer').style.display = 'none';
+}
+
+// ============================================================
+// GAME RENDERING
+// ============================================================
+function renderGameBoard() {
+  if (!gameState) return;
+  const { hands, discards, melds, flowers, currentTurn, lastDiscard, wallIndex, wall, round } = gameState;
+  const wallLeft = (wall || []).length - (wallIndex || 0);
+
+  txt('center-wind',  WINDS[(round || 1) - 1] || '東');
+  txt('center-round', `第${round || 1}局`);
+  txt('center-wall',  `牌牆: ${wallLeft}`);
+
+  // Seats: cornerRelMap[cornerIdx] = relSeat (0=me,1=right,2=across,3=left)
+  const myAbsSeat = PLAYER_IDS.indexOf(myPlayerId);
+  const relToAbs  = rel => PLAYER_IDS[(myAbsSeat + rel) % 4];
+  // corner layout: 0=top-left(across=rel2), 1=top-right(right=rel1), 2=bot-left(left=rel3), 3=bot-right(me=rel0)
+  const cornerRelMap = [2, 1, 3, 0];
+  cornerRelMap.forEach((rel, ci) => {
+    const pid   = relToAbs(rel);
+    const pData = roomPlayers[pid] || {};
+    el(`avatar-face-${ci}`).textContent  = EMOJI_AVATARS[pData.avatarIdx || 0];
+    el(`avatar-name-${ci}`).textContent  = pData.name || pid;
+    el(`avatar-score-${ci}`).textContent = `${scores[pid] || 0}分`;
+    const corner = el(`corner-${ci}`);
+    corner.style.outline      = pid === currentTurn ? '2px solid #f5c518' : '';
+    corner.style.borderRadius = '50px';
+  });
+
+  // Discards: dzRelMap[dzId] = relSeat
+  const dzRelMap = { 'dz-top': 2, 'dz-right': 1, 'dz-left': 3, 'dz-bot': 0 };
+  Object.entries(dzRelMap).forEach(([dzId, rel]) => {
+    const pid  = relToAbs(rel);
+    const zone = el(dzId);
+    while (zone.firstChild) zone.removeChild(zone.firstChild);
+    const pile  = discards[pid] || [];
+    const isLast = d => lastDiscard && lastDiscard.by === pid && d === pile.length - 1;
+    pile.forEach((t, i) => zone.appendChild(makeTileEl(t, 'small', isLast(i) ? 'discard-last' : '')));
+  });
+
+  renderMyHand();
+
+  // Turn indicator
+  el('turn-indicator').style.opacity = currentTurn === myPlayerId ? '1' : '0';
+  updateActionButtons();
+}
+
+function renderMyHand() {
+  if (!gameState) return;
+  const hand    = sortTiles(gameState.hands[myPlayerId] || []);
+  const myMelds = gameState.melds[myPlayerId] || [];
+  const myFlows = gameState.flowers[myPlayerId] || [];
+
+  const tilesContainer = el('hand-tiles');
+  while (tilesContainer.firstChild) tilesContainer.removeChild(tilesContainer.firstChild);
+  hand.forEach((t, i) => {
+    const tileEl = makeTileEl(t, 'large', i === selectedTileIdx ? 'selected' : '');
+    tileEl.addEventListener('click', () => {
+      selectedTileIdx = (selectedTileIdx === i) ? null : i;
+      renderMyHand();
+      updateActionButtons();
+    });
+    tilesContainer.appendChild(tileEl);
+  });
+
+  const meldsContainer = el('hand-melds');
+  while (meldsContainer.firstChild) meldsContainer.removeChild(meldsContainer.firstChild);
+  myMelds.forEach(meld => {
+    const grp = document.createElement('div');
+    grp.className = 'meld-group';
+    meld.tiles.forEach(t => grp.appendChild(makeTileEl(t, 'small')));
+    const lbl = document.createElement('span');
+    lbl.className = 'meld-type-lbl';
+    lbl.textContent = meld.type;
+    grp.appendChild(lbl);
+    meldsContainer.appendChild(grp);
+  });
+
+  const flowersContainer = el('hand-flowers');
+  while (flowersContainer.firstChild) flowersContainer.removeChild(flowersContainer.firstChild);
+  myFlows.forEach(t => flowersContainer.appendChild(makeTileEl(t, 'small')));
+}
+
+function updateActionButtons() {
+  if (!gameState) return;
+  const { currentTurn, lastDiscard, hands, melds } = gameState;
+  const isMyTurn = currentTurn === myPlayerId;
+  const myHand   = hands[myPlayerId] || [];
+  const myMelds  = melds[myPlayerId] || [];
+  const lastTile = lastDiscard?.tile;
+  const lastBy   = lastDiscard?.by;
+  const canClaim = !!lastTile && lastBy !== myPlayerId && !isMyTurn;
+
+  const chowOpts = canClaim ? canChow(myHand, lastTile, lastBy) : [];
+  pendingChowOptions = chowOpts;
+
+  el('btn-pong').disabled     = !(canClaim && canPong(myHand, lastTile));
+  el('btn-chow').disabled     = chowOpts.length === 0;
+  el('btn-kong').disabled     = !((canClaim && getKongOptions(myHand, lastTile, myMelds).some(k => k.type === '明槓'))
+                               || (isMyTurn && getKongOptions(myHand, null, myMelds).some(k => k.type !== '明槓')));
+  el('btn-win-claim').disabled = !((canClaim && canWin([...myHand, lastTile], myMelds))
+                               || (isMyTurn && canWin(myHand, myMelds)));
+  el('btn-discard').disabled  = !(isMyTurn && selectedTileIdx !== null);
+  el('btn-skip').disabled     = !canClaim;
+}
+
+// ============================================================
+// WIN SCREEN
+// ============================================================
+function showWinScreen(winInfo, winnerPid) {
+  const winner = roomPlayers[winnerPid] || {};
+  el('win-title').textContent     = `🎉 ${winner.name || winnerPid} 胡牌！`;
+  el('win-player-lbl').textContent = winInfo.isSelfDraw ? '自摸！' : `放槍者：${roomPlayers[winInfo.discarder]?.name || winInfo.discarder || ''}`;
+  el('win-tai-lbl').textContent   = `${winInfo.tai} 台`;
+  el('win-breakdown').textContent = winInfo.breakdown || '';
+
+  const handEl = el('win-hand');
+  while (handEl.firstChild) handEl.removeChild(handEl.firstChild);
+  (winInfo.hand || []).forEach(t => handEl.appendChild(makeTileEl(t, 'medium')));
+
+  // Score update
+  const basePayment = Math.pow(2, Math.min(winInfo.tai, 8)) * 10;
+  PLAYER_IDS.forEach(pid => {
+    if (pid === winnerPid) return;
+    const isDiscarder = !winInfo.isSelfDraw && pid === winInfo.discarder;
+    const isDealer    = gameState?.dealer === pid && winnerPid !== gameState?.dealer;
+    let pay = 0;
+    if (winInfo.isSelfDraw) pay = isDealer ? basePayment * 2 : basePayment;
+    else if (isDiscarder)   pay = basePayment * 3;
+    scores[winnerPid] = (scores[winnerPid] || 0) + pay;
+    scores[pid]       = (scores[pid] || 0) - pay;
+  });
+
+  showScreen('screen-win');
+}
+
+// ============================================================
+// LOBBY
+// ============================================================
+function renderLobbyPlayers(players) {
+  const container = el('lobby-players');
+  while (container.firstChild) container.removeChild(container.firstChild);
+
+  PLAYER_IDS.forEach((pid, i) => {
+    const p    = players[pid];
+    const slot = document.createElement('div');
+    slot.className = `lobby-player-slot${p ? '' : ' empty'}`;
+
+    const avatarDiv = document.createElement('div');
+    avatarDiv.className = 'lobby-player-avatar';
+    avatarDiv.textContent = p ? EMOJI_AVATARS[p.avatarIdx || 0] : '⌛';
+    slot.appendChild(avatarDiv);
+
+    const infoDiv = document.createElement('div');
+    infoDiv.className = 'lobby-player-info';
+
+    const nameDiv = document.createElement('div');
+    nameDiv.className = 'lobby-player-name';
+    nameDiv.textContent = p ? (p.name || '玩家') : '等待加入…';
+    if (!p) nameDiv.style.opacity = '0.5';
+    infoDiv.appendChild(nameDiv);
+
+    if (p) {
+      const subDiv = document.createElement('div');
+      subDiv.className = 'lobby-player-sub';
+      subDiv.textContent = `座位${i + 1}${pid === myPlayerId ? '（你）' : ''}`;
+      infoDiv.appendChild(subDiv);
+    }
+    slot.appendChild(infoDiv);
+
+    if (p) {
+      const dot = document.createElement('div');
+      dot.className = `lobby-player-ready-dot${p.ready ? '' : ' not-ready'}`;
+      slot.appendChild(dot);
+    }
+
+    container.appendChild(slot);
+  });
+}
+
+// ============================================================
+// ROOM CREATION / JOINING
+// ============================================================
+function generateRoomCode() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let code = '';
+  for (let i = 0; i < 4; i++) code += chars[Math.floor(Math.random() * chars.length)];
+  return code;
+}
+
+async function createRoom() {
+  roomCode   = generateRoomCode();
+  myPlayerId = 'p1';
+  isHost     = true;
+  await set(ref(db, `rooms/${roomCode}`), {
+    status: 'waiting',
+    createdAt: Date.now(),
+    players: { p1: { name: myName, avatarIdx: myAvatarIdx, ready: false, seat: 0 } },
+  });
+  enterLobby();
+}
+
+async function joinRoom(code) {
+  code = code.toUpperCase().trim();
+  const snap = await get(ref(db, `rooms/${code}`));
+  if (!snap.exists())                   { showToast('找不到此房間'); return; }
+  const data = snap.val();
+  if (data.status !== 'waiting')        { showToast('此房間已開始遊戲'); return; }
+  const taken  = Object.keys(data.players || {});
+  const nextId = PLAYER_IDS.find(id => !taken.includes(id));
+  if (!nextId)                           { showToast('房間已滿（4人）'); return; }
+
+  myPlayerId = nextId;
+  roomCode   = code;
+  isHost     = false;
+  await set(ref(db, `rooms/${code}/players/${nextId}`), {
+    name: myName, avatarIdx: myAvatarIdx, ready: false, seat: PLAYER_IDS.indexOf(nextId),
+  });
+  enterLobby();
+}
+
+function enterLobby() {
+  txt('lobby-code', roomCode);
+  el('btn-start').style.display = isHost ? 'block' : 'none';
+  el('btn-ready').style.display = isHost ? 'none'  : 'block';
+  el('btn-ready').disabled  = false;
+  el('btn-ready').textContent = '✅ 準備好了';
+  showScreen('screen-lobby');
+
+  const rRef = ref(db, `rooms/${roomCode}`);
+  addListener(rRef, snap => {
+    if (!snap.exists()) return;
+    const data = snap.val();
+    roomPlayers = data.players || {};
+    renderLobbyPlayers(roomPlayers);
+
+    const allReady = Object.keys(roomPlayers).length === 4 && Object.values(roomPlayers).every(p => p.ready);
+    if (isHost) {
+      el('btn-start').classList.toggle('enabled', allReady);
+      el('btn-start').disabled = !allReady;
+    }
+
+    if (data.status === 'playing') {
+      clearListeners();
+      beginGame(data);
+    }
+  });
+}
+
+// ============================================================
+// GAME START
+// ============================================================
+async function beginGame(roomData) {
+  roomPlayers = roomData.players || {};
+  showScreen('screen-game');
+
+  if (isHost && (!roomData.game || roomData.game.status !== 'playing')) {
+    await dealAndPushGame();
+    return;
+  }
+
+  listenToGame();
+}
+
+async function dealAndPushGame() {
+  const wall = buildWall();
+  const hands = {}, flowers = {};
+  let idx = 0;
+
+  PLAYER_IDS.forEach(pid => { hands[pid] = []; flowers[pid] = []; });
+
+  // Deal 16 tiles each
+  PLAYER_IDS.forEach(pid => {
+    for (let j = 0; j < 16; j++) {
+      while (idx < wall.length && isFlower(wall[idx])) { flowers[pid].push(wall[idx++]); }
+      if (idx < wall.length) hands[pid].push(wall[idx++]);
+    }
+  });
+  // Dealer (p1) gets one extra tile
+  while (idx < wall.length && isFlower(wall[idx])) { flowers['p1'].push(wall[idx++]); }
+  if (idx < wall.length) hands['p1'].push(wall[idx++]);
+
+  await set(ref(db, `rooms/${roomCode}/game`), {
+    wall, wallIndex: idx,
+    hands, flowers,
+    discards: { p1:[], p2:[], p3:[], p4:[] },
+    melds:    { p1:[], p2:[], p3:[], p4:[] },
+    currentTurn: 'p1',
+    lastDiscard: null,
+    pendingAction: null,
+    dealer: 'p1',
+    round: 1,
+    status: 'playing',
+  });
+
+  listenToGame();
+}
+
+function listenToGame() {
+  const gRef = ref(db, `rooms/${roomCode}/game`);
+  addListener(gRef, snap => {
+    if (!snap.exists()) return;
+    gameState = snap.val();
+
+    if (gameState.status === 'won') {
+      stopActionTimer();
+      showWinScreen(gameState.winInfo, gameState.winner);
+      return;
+    }
+
+    renderGameBoard();
+
+    const { currentTurn, lastDiscard } = gameState;
+    const isMyTurn  = currentTurn === myPlayerId;
+    const myHand    = gameState.hands[myPlayerId] || [];
+    const myMelds   = gameState.melds[myPlayerId] || [];
+    const canClaim  = !!lastDiscard && lastDiscard.by !== myPlayerId && !isMyTurn;
+
+    if (canClaim) {
+      const lastTile   = lastDiscard.tile;
+      const hasAction  = canPong(myHand, lastTile)
+                      || canChow(myHand, lastTile, lastDiscard.by).length > 0
+                      || canWin([...myHand, lastTile], myMelds);
+      if (hasAction) startActionTimer(8, () => fireSkip());
+      else stopActionTimer();
+    } else {
+      stopActionTimer();
+    }
+
+    // Auto-draw when it's my turn and no pending discard
+    if (isMyTurn && !lastDiscard) {
+      const myHandNow = gameState.hands[myPlayerId] || [];
+      // Only auto-draw if hand is short (haven't drawn yet this turn)
+      const expectedLen = (4 - (gameState.melds[myPlayerId]||[]).length) * 3 + 2;
+      if (myHandNow.length < expectedLen) {
+        setTimeout(() => {
+          if (gameState?.currentTurn === myPlayerId && !gameState?.lastDiscard) fireDraw();
+        }, 400);
+      }
+    }
+  });
+}
+
+// ============================================================
+// EVENT LISTENERS
+// ============================================================
+el('btn-create').addEventListener('click', async () => {
+  myName = el('my-name-input').value.trim() || '玩家一';
+  el('btn-create').disabled = true;
+  try { await createRoom(); } finally { el('btn-create').disabled = false; }
+});
+
+el('btn-join').addEventListener('click', async () => {
+  const code = el('join-code-input').value.trim();
+  if (code.length !== 4) { showToast('請輸入4位房間代碼'); return; }
+  myName = el('my-name-input').value.trim() || '玩家';
+  el('btn-join').disabled = true;
+  try { await joinRoom(code); } finally { el('btn-join').disabled = false; }
+});
+
+el('join-code-input').addEventListener('keydown', e => { if (e.key === 'Enter') el('btn-join').click(); });
+
+el('btn-copy-link').addEventListener('click', () => {
+  const url = `${location.origin}${location.pathname}?room=${roomCode}`;
+  navigator.clipboard.writeText(url)
+    .then(() => showToast('已複製邀請連結！'))
+    .catch(() => showToast(`連結：${url}`));
+});
+
+el('btn-back-home').addEventListener('click', async () => {
+  clearListeners();
+  if (roomCode && myPlayerId) await remove(ref(db, `rooms/${roomCode}/players/${myPlayerId}`));
+  roomCode = myPlayerId = null;
+  showScreen('screen-home');
+});
+
+el('avatar-select-row').addEventListener('click', e => {
+  const opt = e.target.closest('.avatar-opt');
+  if (!opt) return;
+  document.querySelectorAll('.avatar-opt').forEach(o => o.classList.remove('selected'));
+  opt.classList.add('selected');
+  myAvatarIdx = parseInt(opt.dataset.avatar);
+  if (roomCode && myPlayerId)
+    update(ref(db, `rooms/${roomCode}/players/${myPlayerId}`), { avatarIdx: myAvatarIdx });
+});
+
+el('my-name-input').addEventListener('input', e => {
+  myName = e.target.value.trim() || '玩家';
+  if (roomCode && myPlayerId)
+    update(ref(db, `rooms/${roomCode}/players/${myPlayerId}`), { name: myName });
+});
+
+el('btn-ready').addEventListener('click', async () => {
+  await update(ref(db, `rooms/${roomCode}/players/${myPlayerId}`), {
+    name: myName, avatarIdx: myAvatarIdx, ready: true,
+  });
+  el('btn-ready').textContent = '✅ 已準備';
+  el('btn-ready').disabled = true;
+});
+
+el('btn-start').addEventListener('click', async () => {
+  if (Object.keys(roomPlayers).length < 4) { showToast('需要4位玩家才能開始'); return; }
+  await update(ref(db, `rooms/${roomCode}`), { status: 'playing' });
+});
+
+el('btn-discard').addEventListener('click', () => fireDiscard());
+el('btn-pong').addEventListener('click', () => firePong());
+
+el('btn-chow').addEventListener('click', () => {
+  if (pendingChowOptions.length === 0) return;
+  if (pendingChowOptions.length === 1) { fireChow(pendingChowOptions[0]); return; }
+  // Show chooser
+  const optionsEl = el('chow-options');
+  while (optionsEl.firstChild) optionsEl.removeChild(optionsEl.firstChild);
+  const lastTile = gameState.lastDiscard.tile;
+  pendingChowOptions.forEach(opt => {
+    const row = document.createElement('div');
+    row.className = 'chow-option';
+    sortTiles([lastTile, ...opt]).forEach(t => row.appendChild(makeTileEl(t, 'medium')));
+    row.addEventListener('click', () => {
+      el('chow-selector').style.display = 'none';
+      fireChow(opt);
+    });
+    optionsEl.appendChild(row);
+  });
+  el('chow-selector').style.display = 'flex';
+});
+
+el('chow-cancel').addEventListener('click', () => { el('chow-selector').style.display = 'none'; });
+
+el('btn-kong').addEventListener('click', () => {
+  if (!gameState) return;
+  const hand   = gameState.hands[myPlayerId] || [];
+  const melds  = gameState.melds[myPlayerId] || [];
+  const lastTile = gameState.lastDiscard?.tile;
+  const isMyTurn = gameState.currentTurn === myPlayerId;
+  const opts = getKongOptions(hand, isMyTurn ? null : lastTile, melds);
+  if (opts.length > 0) fireKong(opts[0]);
+});
+
+el('btn-win-claim').addEventListener('click', () => fireDeclareWin());
+el('btn-skip').addEventListener('click', () => { stopActionTimer(); fireSkip(); });
+
+el('btn-play-again').addEventListener('click', async () => {
+  showScreen('screen-lobby');
+  await update(ref(db, `rooms/${roomCode}`), { status: 'waiting', game: null });
+  await update(ref(db, `rooms/${roomCode}/players/${myPlayerId}`), { ready: false });
+  el('btn-ready').textContent = '✅ 準備好了';
+  el('btn-ready').disabled = false;
+  // Re-enter lobby listener
+  clearListeners();
+  enterLobby();
+});
+
+// ============================================================
+// AUTO-JOIN FROM URL
+// ============================================================
+const urlParams = new URLSearchParams(location.search);
+const roomParam = urlParams.get('room');
+if (roomParam) el('join-code-input').value = roomParam.toUpperCase();
+
+// ============================================================
+// BOOT
+// ============================================================
+setLoadingPct(30);
+setTimeout(() => setLoadingPct(70), 300);
+setTimeout(() => { setLoadingPct(100); showScreen('screen-home'); }, 700);
+</script>
+</body>
+</html>
