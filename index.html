@@ -958,7 +958,7 @@ async function createRoom() {
   await set(ref(db, `rooms/${roomCode}`), {
     status: 'waiting',
     createdAt: Date.now(),
-    players: { p1: { name: myName, avatarIdx: myAvatarIdx, ready: false, seat: 0 } },
+    players: { p1: { name: myName, avatarIdx: myAvatarIdx, ready: true, seat: 0 } },
   });
   enterLobby();
 }
