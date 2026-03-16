@@ -27,6 +27,9 @@ html, body { width: 100%; height: 100%; overflow: hidden; background: #1a4a1a; f
 .join-input:focus { border-color: #f5c518; background: rgba(255,255,255,0.2); }
 .join-btn { flex: 1; padding: 16px; font-size: 1.1rem; font-weight: 700; background: linear-gradient(135deg, #3a8a3a, #2a6a2a); border: 2px solid #5aaa5a; border-radius: 12px; color: #fff; cursor: pointer; }
 .home-hint { font-size: 0.8rem; color: #6a9a6a; margin-top: 1.5rem; text-align: center; }
+.version-row { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
+.version-lbl { font-size: 0.75rem; color: #5a7a5a; }
+.update-check-btn { font-size: 0.75rem; color: #aed6ae; background: none; border: 1px solid #4a6a4a; border-radius: 10px; padding: 3px 10px; cursor: pointer; }
 
 /* ===== LOBBY SCREEN ===== */
 #screen-lobby { background: radial-gradient(ellipse at center, #2d5a8a 0%, #0f1f3f 100%); padding: 20px; justify-content: flex-start; padding-top: 40px; }
@@ -81,35 +84,36 @@ html, body { width: 100%; height: 100%; overflow: hidden; background: #1a4a1a; f
 .dz-center { grid-area: center; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 4px; }
 
 /* ===== TILE STYLING ===== */
-.tile { display: inline-flex; flex-direction: column; align-items: center; justify-content: center;
+.tile {
+  display: inline-flex; align-items: center; justify-content: center;
   background: linear-gradient(160deg, #fffff8 0%, #ede8d0 100%);
   border-radius: 4px; border: 1px solid #b0a080;
-  box-shadow: 0 3px 5px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.9), inset 0 -2px 0 rgba(0,0,0,0.08);
-  cursor: pointer; user-select: none; transition: transform 0.12s, box-shadow 0.12s;
-  position: relative; flex-shrink: 0; }
-.tile.small  { width: 24px; height: 32px; border-radius: 3px; gap: 0; }
-.tile.medium { width: 36px; height: 50px; border-radius: 5px; gap: 1px; }
-.tile.large  { width: 46px; height: 64px; border-radius: 6px; gap: 1px; }
-.tile.selected { transform: translateY(-12px); box-shadow: 0 10px 20px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.9); border-color: #f5c518; outline: 2px solid #f5c518; }
+  box-shadow: 0 3px 6px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.95), inset 0 -2px 0 rgba(0,0,0,0.1);
+  cursor: pointer; user-select: none;
+  transition: transform 0.12s, box-shadow 0.12s;
+  position: relative; flex-shrink: 0;
+}
+.tile.small  { width: 26px;  height: 34px;  border-radius: 3px; }
+.tile.medium { width: 40px;  height: 54px;  border-radius: 5px; }
+.tile.large  { width: 52px;  height: 70px;  border-radius: 6px; }
+.tile.selected {
+  transform: translateY(-14px);
+  box-shadow: 0 12px 24px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.95);
+  border-color: #f5c518; outline: 2px solid #f5c518;
+}
 .tile.flower { background: linear-gradient(160deg, #fffbe8 0%, #f0e0a0 100%); border-color: #c8a050; }
 .tile.discard-last { outline: 2px solid #f5c518; outline-offset: 1px; }
-/* tile inner elements */
-.tile-num  { font-weight: 900; line-height: 1; }
-.tile-suit { line-height: 1; font-weight: 700; }
-.tile-honor { font-weight: 900; line-height: 1; }
-/* small */
-.tile.small .tile-num  { font-size: 10px; }
-.tile.small .tile-suit { font-size: 8px; }
-.tile.small .tile-honor { font-size: 10px; }
-/* medium */
-.tile.medium .tile-num  { font-size: 15px; }
-.tile.medium .tile-suit { font-size: 11px; }
-.tile.medium .tile-honor { font-size: 14px; }
-/* large */
-.tile.large .tile-num  { font-size: 20px; }
-.tile.large .tile-suit { font-size: 13px; }
-.tile.large .tile-honor { font-size: 18px; }
-/* suit colours */
+/* Unicode tile character */
+.tile-uni { line-height: 1; display: block; }
+.tile.small  .tile-uni { font-size: 18px; }
+.tile.medium .tile-uni { font-size: 28px; }
+.tile.large  .tile-uni { font-size: 36px; }
+/* text fallback */
+.tile-text { font-weight: 900; }
+.tile.small  .tile-text { font-size: 9px; }
+.tile.medium .tile-text { font-size: 13px; }
+.tile.large  .tile-text { font-size: 17px; }
+/* suit colours (for fallback text) */
 .suit-m { color: #cc0000; }
 .suit-p { color: #007700; }
 .suit-s { color: #0044cc; }
@@ -118,17 +122,15 @@ html, body { width: 100%; height: 100%; overflow: hidden; background: #1a4a1a; f
 
 /* ===== LANDSCAPE ===== */
 @media (orientation: landscape) {
-  .discard-area { inset: 80px 120px 130px 120px; }
-  .avatar-corner.p-bot-left, .avatar-corner.p-bot-right { bottom: 125px; }
-  .tile.large  { width: 36px; height: 50px; }
-  .tile.large .tile-num  { font-size: 15px; }
-  .tile.large .tile-suit { font-size: 11px; }
-  .tile.large .tile-honor { font-size: 14px; }
-  .hand-area { padding: 4px 6px 2px; }
-  .hand-tiles { min-height: 56px; }
-  .action-bar { padding: 4px 6px 6px; }
-  .action-btn { padding: 7px 4px; font-size: 0.9rem; }
-  .avatar-face { width: 60px; height: 60px; font-size: 1.6rem; }
+  .discard-area { inset: 70px 110px 120px 110px; }
+  .avatar-corner.p-bot-left, .avatar-corner.p-bot-right { bottom: 115px; }
+  .tile.large  { width: 38px; height: 52px; }
+  .tile.large  .tile-uni { font-size: 26px; }
+  .hand-area   { padding: 4px 6px 2px; }
+  .hand-tiles  { min-height: 58px; }
+  .action-bar  { padding: 3px 6px 5px; }
+  .action-btn  { padding: 6px 4px; font-size: 0.85rem; min-width: 46px; }
+  .avatar-face { width: 56px; height: 56px; font-size: 1.5rem; }
 }
 
 /* Hand area */
@@ -223,6 +225,10 @@ html, body { width: 100%; height: 100%; overflow: hidden; background: #1a4a1a; f
     <button class="join-btn" id="btn-join">加入</button>
   </div>
   <div class="home-hint">支援任何裝置，用瀏覽器開啟即可</div>
+  <div class="version-row">
+    <span class="version-lbl" id="version-lbl">v__VERSION__</span>
+    <button class="update-check-btn" id="btn-check-update">檢查更新</button>
+  </div>
 </div>
 
 <!-- ===== LOBBY SCREEN ===== -->
@@ -441,51 +447,38 @@ function tileSuitClass(t) {
 }
 
 // Suit display symbols
-const SUIT_SYMBOLS = { m: '萬', p: '筒', s: '索' };
-const HONOR_MAP = {
-  '1z':'東','2z':'南','3z':'西','4z':'北',
-  '5z':'白','6z':'發','7z':'中'
+// Unicode 麻將牌對照表
+const TILE_UNICODE = {
+  '1m':'🀇','2m':'🀈','3m':'🀉','4m':'🀊','5m':'🀋','6m':'🀌','7m':'🀍','8m':'🀎','9m':'🀏',
+  '1p':'🀙','2p':'🀚','3p':'🀛','4p':'🀜','5p':'🀝','6p':'🀞','7p':'🀟','8p':'🀠','9p':'🀡',
+  '1s':'🀐','2s':'🀑','3s':'🀒','4s':'🀓','5s':'🀔','6s':'🀕','7s':'🀖','8s':'🀗','9s':'🀘',
+  '1z':'🀀','2z':'🀁','3z':'🀂','4z':'🀃',
+  '7z':'🀄','6z':'🀅','5z':'🀆',
+  'f1':'🌸','f2':'🌺','f3':'🌼','f4':'🎋','f5':'🌱','f6':'☀️','f7':'🍂','f8':'❄️',
 };
-const FLOWER_MAP = ['','梅','蘭','菊','竹','春','夏','秋','冬'];
+const TILE_LABEL = {
+  '1z':'東','2z':'南','3z':'西','4z':'北','5z':'白','6z':'發','7z':'中',
+  'f1':'梅','f2':'蘭','f3':'菊','f4':'竹','f5':'春','f6':'夏','f7':'秋','f8':'冬',
+};
 
 function makeTileEl(t, size = 'medium', extra = '') {
   const div = document.createElement('div');
   const flr = isFlower(t);
   div.className = ['tile', size, flr ? 'flower' : '', extra].filter(Boolean).join(' ');
   div.dataset.tile = t;
-
   if (!t) return div;
-  const suit = t[1];
 
-  if (suit === 'm' || suit === 'p' || suit === 's') {
-    // Numbered suit tile — show number on top, suit below
-    const numEl  = document.createElement('div');
-    numEl.className = 'tile-num ' + tileSuitClass(t);
-    numEl.textContent = t[0];
-    const suitEl = document.createElement('div');
-    suitEl.className = 'tile-suit ' + tileSuitClass(t);
-    suitEl.textContent = SUIT_SYMBOLS[suit];
-    div.appendChild(numEl);
-    div.appendChild(suitEl);
-  } else if (suit === 'z') {
-    // Honor tile — single kanji centered
-    const h = document.createElement('div');
-    h.className = 'tile-honor ' + tileSuitClass(t);
-    h.textContent = HONOR_MAP[t] || t;
-    div.appendChild(h);
-  } else if (flr) {
-    // Flower tile
-    const n = parseInt(t[1]);
-    const numEl = document.createElement('div');
-    numEl.className = 'tile-num suit-f';
-    numEl.textContent = n;
-    const lblEl = document.createElement('div');
-    lblEl.className = 'tile-suit suit-f';
-    lblEl.textContent = FLOWER_MAP[n] || '花';
-    div.appendChild(numEl);
-    div.appendChild(lblEl);
+  const uniChar = TILE_UNICODE[t];
+  const uni = document.createElement('div');
+  uni.className = 'tile-uni';
+  if (uniChar) {
+    uni.textContent = uniChar;
+  } else {
+    // fallback: number + suit text
+    uni.textContent = tileLabel(t);
+    uni.className = 'tile-uni tile-text ' + tileSuitClass(t);
   }
-
+  div.appendChild(uni);
   return div;
 }
 
@@ -1489,6 +1482,46 @@ async function botDeclareWin(botPid, isSelfDraw, gs) {
     },
   });
 }
+
+// ============================================================
+// VERSION & MANUAL UPDATE
+// ============================================================
+const CURRENT_BUILD = '__VERSION__';   // CI 替換為實際版本號
+
+async function checkUpdate(manual = false) {
+  const btn = el('btn-check-update');
+  btn.textContent = '檢查中…';
+  btn.disabled = true;
+  try {
+    const resp = await fetch('https://api.github.com/repos/ChenChihChun/Mahjong/releases/latest',
+      { headers: { 'Accept': 'application/vnd.github+json' } });
+    if (!resp.ok) throw new Error('API 失敗');
+    const data = await resp.json();
+    const latestTag = data.tag_name;              // e.g. "build-12"
+    const latestNum = latestTag.replace('build-','');
+    const apkAsset  = (data.assets || []).find(a => a.name.endsWith('.apk'));
+    const apkUrl    = apkAsset?.browser_download_url || data.html_url;
+
+    const isCurrent = CURRENT_BUILD !== '__VERSION__' && latestNum === CURRENT_BUILD;
+    if (isCurrent) {
+      showToast('已是最新版本 ✓');
+    } else {
+      const msg = CURRENT_BUILD === '__VERSION__'
+        ? `最新版本：${latestTag}`
+        : `目前 v${CURRENT_BUILD}，最新 ${latestTag}`;
+      if (confirm(`${msg}\n\n點確定前往下載最新 APK`)) {
+        window.open(apkUrl, '_blank');
+      }
+    }
+  } catch (e) {
+    if (manual) showToast('無法連線，請稍後再試');
+  } finally {
+    btn.textContent = '檢查更新';
+    btn.disabled = false;
+  }
+}
+
+el('btn-check-update').addEventListener('click', () => checkUpdate(true));
 
 // ============================================================
 // AUTO-JOIN FROM URL

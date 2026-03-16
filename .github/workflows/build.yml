@@ -20,9 +20,11 @@ jobs:
           distribution: 'temurin'
 
       - name: Copy web assets into Android assets
+        env:
+          BUILD_NUMBER: ${{ github.run_number }}
         run: |
           mkdir -p app/src/main/assets
-          cp index.html app/src/main/assets/
+          sed "s/__VERSION__/${BUILD_NUMBER}/g" index.html > app/src/main/assets/index.html
           cp -r assets/ app/src/main/assets/assets/ 2>/dev/null || true
 
       - name: Grant execute permission for gradlew
@@ -65,6 +67,12 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
+
+      - name: Inject version into index.html
+        env:
+          BUILD_NUMBER: ${{ github.run_number }}
+        run: sed -i "s/__VERSION__/${BUILD_NUMBER}/g" index.html
+
       - uses: actions/configure-pages@v4
       - uses: actions/upload-pages-artifact@v3
         with:
