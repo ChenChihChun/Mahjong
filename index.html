@@ -54,6 +54,7 @@ html, body { width: 100%; height: 100%; overflow: hidden; background: #1a4a1a; f
 .lobby-start-btn.enabled { opacity: 1; }
 .lobby-ready-btn { width: 100%; max-width: 400px; padding: 16px; font-size: 1.1rem; font-weight: 700; background: linear-gradient(135deg, #2a8a2a, #1a6a1a); color: #fff; border: 2px solid #4aaa4a; border-radius: 12px; cursor: pointer; margin-bottom: 10px; }
 .lobby-back-btn { background: none; border: none; color: #9ab; font-size: 0.9rem; cursor: pointer; margin-top: 8px; }
+.lobby-bot-btn { width: 100%; max-width: 400px; padding: 12px; font-size: 1rem; font-weight: 700; background: linear-gradient(135deg, #5a4a8a, #3a2a6a); color: #fff; border: 2px solid #8a7aaa; border-radius: 12px; cursor: pointer; margin-bottom: 8px; }
 
 /* ===== GAME SCREEN ===== */
 #screen-game { background: #1a5a1a; padding: 0; justify-content: flex-start; }
@@ -207,6 +208,7 @@ html, body { width: 100%; height: 100%; overflow: hidden; background: #1a4a1a; f
     </div>
   </div>
   <button class="lobby-ready-btn" id="btn-ready">✅ 準備好了</button>
+  <button class="lobby-bot-btn"  id="btn-add-bot" style="display:none">🤖 加入電腦測試</button>
   <button class="lobby-start-btn" id="btn-start" style="display:none" disabled>🀄 開始遊戲</button>
   <button class="lobby-back-btn" id="btn-back-home">← 返回</button>
 </div>
@@ -982,8 +984,9 @@ async function joinRoom(code) {
 
 function enterLobby() {
   txt('lobby-code', roomCode);
-  el('btn-start').style.display = isHost ? 'block' : 'none';
-  el('btn-ready').style.display = isHost ? 'none'  : 'block';
+  el('btn-start').style.display   = isHost ? 'block' : 'none';
+  el('btn-ready').style.display   = isHost ? 'none'  : 'block';
+  el('btn-add-bot').style.display = isHost ? 'block' : 'none';
   el('btn-ready').disabled  = false;
   el('btn-ready').textContent = '✅ 準備好了';
   showScreen('screen-lobby');
@@ -1021,6 +1024,7 @@ async function beginGame(roomData) {
   }
 
   listenToGame();
+  if (isHost) startBotBrain();
 }
 
 async function dealAndPushGame() {
@@ -1212,6 +1216,196 @@ el('btn-play-again').addEventListener('click', async () => {
   clearListeners();
   enterLobby();
 });
+
+// ============================================================
+// BOT LOGIC — runs in host's browser, controls bot players
+// ============================================================
+const BOT_NAMES   = ['電腦甲', '電腦乙', '電腦丙'];
+const BOT_AVATARS = [1, 2, 3];
+let botPlayerIds  = [];   // which player IDs are bots
+let botListening  = false;
+
+async function addBots() {
+  const current = Object.keys(roomPlayers);
+  const empty   = PLAYER_IDS.filter(id => !current.includes(id));
+  if (empty.length === 0) { showToast('座位已滿'); return; }
+
+  for (let i = 0; i < empty.length; i++) {
+    const pid  = empty[i];
+    const name = BOT_NAMES[i] || `電腦${i + 1}`;
+    await set(ref(db, `rooms/${roomCode}/players/${pid}`), {
+      name, avatarIdx: BOT_AVATARS[i] || 1, ready: true, seat: PLAYER_IDS.indexOf(pid), isBot: true,
+    });
+    botPlayerIds.push(pid);
+  }
+  showToast(`已加入 ${empty.length} 個電腦玩家`);
+}
+
+el('btn-add-bot').addEventListener('click', addBots);
+
+// Start bot brain after game begins
+function startBotBrain() {
+  if (botListening || botPlayerIds.length === 0) return;
+  botListening = true;
+
+  const gRef = ref(db, `rooms/${roomCode}/game`);
+  addListener(gRef, snap => {
+    if (!snap.exists()) return;
+    const gs = snap.val();
+    if (!gs || gs.status === 'won') return;
+
+    botPlayerIds.forEach(pid => runBotTurn(gs, pid));
+  });
+}
+
+async function runBotTurn(gs, botPid) {
+  const { currentTurn, lastDiscard, hands, melds, flowers, wall, wallIndex } = gs;
+  const botHand  = hands[botPid]  || [];
+  const botMelds = melds[botPid]  || [];
+  const lastTile = lastDiscard?.tile;
+  const lastBy   = lastDiscard?.by;
+
+  // --- Someone discarded, bot can claim ---
+  if (lastTile && lastBy !== botPid && currentTurn !== botPid) {
+    await new Promise(r => setTimeout(r, 800 + Math.random() * 800));
+    // Re-read latest state to avoid stale decisions
+    const fresh = (await get(ref(db, `rooms/${roomCode}/game`))).val();
+    if (!fresh || fresh.lastDiscard?.tile !== lastTile) return;
+
+    // 1. Win check
+    if (canWin([...botHand, lastTile], botMelds)) {
+      await botDeclareWin(botPid, false, fresh);
+      return;
+    }
+    // 2. Pong
+    if (canPong(botHand, lastTile)) {
+      await botPong(botPid, lastTile, botHand, botMelds);
+      return;
+    }
+    // 3. Pass (skip)
+    // Only skip if it's "our" turn to respond (simplified: always skip if no action)
+    return;
+  }
+
+  // --- Bot's own turn ---
+  if (currentTurn !== botPid) return;
+  await new Promise(r => setTimeout(r, 600 + Math.random() * 600));
+
+  // Re-read
+  const fresh = (await get(ref(db, `rooms/${roomCode}/game`))).val();
+  if (!fresh || fresh.currentTurn !== botPid) return;
+
+  const freshHand = fresh.hands[botPid] || [];
+  const freshMelds = fresh.melds[botPid] || [];
+  const expectedLen = (4 - freshMelds.length) * 3 + 2;
+
+  // Need to draw?
+  if (freshHand.length < expectedLen && !fresh.lastDiscard) {
+    await botDraw(botPid, fresh);
+    return;
+  }
+
+  // Self-draw win check
+  if (canWin(freshHand, freshMelds)) {
+    await botDeclareWin(botPid, true, fresh);
+    return;
+  }
+
+  // Discard worst tile
+  await botDiscard(botPid, freshHand, freshMelds, fresh);
+}
+
+async function botDraw(botPid, gs) {
+  const wall  = gs.wall;
+  let idx     = gs.wallIndex;
+  if (idx >= wall.length) return;
+  const hand    = [...(gs.hands[botPid] || [])];
+  const flowers = [...(gs.flowers[botPid] || [])];
+  let tile = wall[idx++];
+  while (isFlower(tile) && idx < wall.length) { flowers.push(tile); tile = wall[idx++]; }
+  if (isFlower(tile)) return;
+  hand.push(tile);
+  await update(ref(db, `rooms/${roomCode}/game`), {
+    [`hands/${botPid}`]: hand,
+    [`flowers/${botPid}`]: flowers,
+    wallIndex: idx,
+  });
+}
+
+async function botDiscard(botPid, hand, myMelds, gs) {
+  // Simple strategy: discard the tile that is most isolated (fewest neighbours)
+  const sorted = sortTiles(hand);
+  const score  = t => {
+    if (t[1] === 'z' || t[1] === 'f') return 0; // honour/flower = low value
+    const n = parseInt(t[0]), s = t[1];
+    let val = 0;
+    [`${n-1}${s}`,`${n+1}${s}`,`${n-2}${s}`,`${n+2}${s}`].forEach(nb => {
+      if (sorted.includes(nb)) val++;
+    });
+    if (sorted.filter(x => x === t).length >= 2) val += 2; // pairs are good
+    return val;
+  };
+  // Discard the lowest-scored tile
+  let worst = sorted[0], worstScore = score(sorted[0]);
+  sorted.forEach(t => { const s = score(t); if (s < worstScore) { worstScore = s; worst = t; } });
+
+  const newHand = [...sorted];
+  const idx = newHand.indexOf(worst);
+  newHand.splice(idx, 1);
+
+  await update(ref(db, `rooms/${roomCode}/game`), {
+    [`hands/${botPid}`]: newHand,
+    [`discards/${botPid}`]: [...(gs.discards[botPid] || []), worst],
+    lastDiscard: { tile: worst, by: botPid },
+    currentTurn: nextPlayer(botPid),
+    pendingAction: null,
+  });
+}
+
+async function botPong(botPid, tile, hand, myMelds) {
+  const newHand = [...hand];
+  let removed = 0;
+  const filtered = newHand.filter(t => (t === tile && removed < 2) ? (removed++, false) : true);
+  const newMelds  = [...myMelds, { type: '碰', tiles: [tile, tile, tile] }];
+  const gs = (await get(ref(db, `rooms/${roomCode}/game`))).val();
+  await update(ref(db, `rooms/${roomCode}/game`), {
+    [`hands/${botPid}`]: filtered,
+    [`melds/${botPid}`]: newMelds,
+    currentTurn: botPid,
+    lastDiscard: null,
+    pendingAction: null,
+  });
+  // Then discard
+  await new Promise(r => setTimeout(r, 700));
+  const fresh2 = (await get(ref(db, `rooms/${roomCode}/game`))).val();
+  if (fresh2?.currentTurn === botPid) {
+    await botDiscard(botPid, fresh2.hands[botPid] || [], fresh2.melds[botPid] || [], fresh2);
+  }
+}
+
+async function botDeclareWin(botPid, isSelfDraw, gs) {
+  const hand    = gs.hands[botPid] || [];
+  const myMelds = gs.melds[botPid] || [];
+  const myFlows = gs.flowers[botPid] || [];
+  const lastTile = gs.lastDiscard?.tile;
+  const fullHand = isSelfDraw ? hand : [...hand, lastTile];
+  if (!canWin(fullHand, myMelds)) return;
+
+  const wallLeft = (gs.wall || []).length - (gs.wallIndex || 0);
+  const isDealer = gs.dealer === botPid;
+  const { tai, breakdown } = calcTai(fullHand, myMelds, myFlows, isSelfDraw, isDealer, wallLeft, false);
+  if (tai < 1) return;
+
+  await update(ref(db, `rooms/${roomCode}/game`), {
+    status: 'won',
+    winner: botPid,
+    winInfo: {
+      tai, breakdown: breakdown.join('，'), isSelfDraw,
+      hand: fullHand,
+      discarder: isSelfDraw ? null : gs.lastDiscard?.by,
+    },
+  });
+}
 
 // ============================================================
 // AUTO-JOIN FROM URL
