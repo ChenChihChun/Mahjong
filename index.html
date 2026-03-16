@@ -524,7 +524,8 @@ function buildWall() {
 // WIN DETECTION
 // ============================================================
 function canWin(hand, melds) {
-  const setsNeeded = 4 - (melds || []).length;
+  // Taiwan 16-tile mahjong: 5 sets + 1 pair = 17 tiles to win
+  const setsNeeded = 5 - (melds || []).length;
   if (hand.length !== setsNeeded * 3 + 2) return false;
   return _checkWin(sortTiles(hand), setsNeeded);
 }
@@ -796,13 +797,15 @@ async function fireDeclareWin() {
   const myFlows = gameState.flowers[myPlayerId] || [];
   const isMyTurn = gameState.currentTurn === myPlayerId;
   const lastTile = gameState.lastDiscard?.tile;
-  const fullHand = isMyTurn ? hand : [...hand, lastTile];
+  const isClaim  = !!lastTile && gameState.lastDiscard?.by !== myPlayerId;
+  const isSelfDraw = isMyTurn && !isClaim;
+  const fullHand = isClaim ? [...hand, lastTile] : hand;
 
   if (!canWin(fullHand, myMelds)) { showToast('牌型不符合胡牌條件'); return; }
 
   const wallLeft = gameState.wall.length - (gameState.wallIndex || 0);
   const isDealer = gameState.dealer === myPlayerId;
-  const { tai, breakdown } = calcTai(fullHand, myMelds, myFlows, isMyTurn, isDealer, wallLeft, false);
+  const { tai, breakdown } = calcTai(fullHand, myMelds, myFlows, isSelfDraw, isDealer, wallLeft, false);
   if (tai < 1) { showToast('未達最低1台，無法胡牌'); return; }
 
   await update(ref(db, `rooms/${roomCode}/game`), {
@@ -811,9 +814,9 @@ async function fireDeclareWin() {
     winInfo: {
       tai,
       breakdown: breakdown.join('，'),
-      isSelfDraw: isMyTurn,
+      isSelfDraw,
       hand: fullHand,
-      discarder: isMyTurn ? null : gameState.lastDiscard?.by,
+      discarder: isClaim ? gameState.lastDiscard?.by : null,
     },
   });
 }
