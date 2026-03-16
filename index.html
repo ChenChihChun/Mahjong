@@ -1166,23 +1166,32 @@ function listenToGame() {
     const isMyTurn  = currentTurn === myPlayerId;
     const myHand    = (gameState.hands  || {})[myPlayerId] || [];
     const myMelds   = (gameState.melds  || {})[myPlayerId] || [];
-    // canClaim: anyone except the discarder can claim (including the "next" player)
+    // canClaim: anyone except the discarder can claim
     const canClaim  = !!lastDiscard && lastDiscard.by !== myPlayerId;
 
     if (canClaim) {
-      const lastTile   = lastDiscard.tile;
-      const hasAction  = canPong(myHand, lastTile)
-                      || canChow(myHand, lastTile, lastDiscard.by).length > 0
-                      || canWin([...myHand, lastTile], myMelds);
-      if (hasAction) {
-        startActionTimer(8, () => fireSkip());
+      const lastTile = lastDiscard.tile;
+      const capDiscard = lastDiscard;
+      const stillValid = () => gameState?.lastDiscard?.tile === capDiscard.tile
+                            && gameState?.lastDiscard?.by  === capDiscard.by;
+      if (isMyTurn) {
+        // I am the next player — I can chow. Show 8s if I have an action.
+        // Either way I'm responsible for clearing lastDiscard (fallback after 9s).
+        const hasAction = canPong(myHand, lastTile)
+                       || canChow(myHand, lastTile, lastDiscard.by).length > 0
+                       || canWin([...myHand, lastTile], myMelds);
+        if (hasAction) {
+          startActionTimer(8, () => fireSkip());
+        } else {
+          stopActionTimer();
+          // Fallback: clear after 9s (longer than C/D's 8s claim window) so game never gets stuck
+          setTimeout(() => { if (stillValid()) fireSkip(); }, 9000);
+        }
       } else {
-        // No claimable action — auto-pass after a short delay so game doesn't get stuck
-        stopActionTimer();
-        setTimeout(() => {
-          if (gameState?.lastDiscard?.by === lastDiscard.by && gameState?.lastDiscard?.tile === lastDiscard.tile)
-            fireSkip();
-        }, 600);
+        // C or D: can pong or win only
+        const hasAction = canPong(myHand, lastTile) || canWin([...myHand, lastTile], myMelds);
+        if (hasAction) startActionTimer(8, () => fireSkip());
+        else stopActionTimer();
       }
     } else {
       stopActionTimer();
@@ -1361,10 +1370,11 @@ async function runBotTurn(gs, botPid) {
   const lastTile = lastDiscard?.tile;
   const lastBy   = lastDiscard?.by;
 
+  const isNextPlayer = currentTurn === botPid;
+
   // --- Someone discarded, bot can claim ---
-  if (lastTile && lastBy !== botPid && currentTurn !== botPid) {
+  if (lastTile && lastBy !== botPid) {
     await new Promise(r => setTimeout(r, 800 + Math.random() * 800));
-    // Re-read latest state to avoid stale decisions
     const fresh = (await get(ref(db, `rooms/${roomCode}/game`))).val();
     if (!fresh || fresh.lastDiscard?.tile !== lastTile) return;
 
@@ -1378,25 +1388,27 @@ async function runBotTurn(gs, botPid) {
       await botPong(botPid, lastTile, botHand, botMelds);
       return;
     }
-    // 3. Pass (skip)
-    // Only skip if it's "our" turn to respond (simplified: always skip if no action)
+    // 3. If this bot is the "next player" (currentTurn), it must clear lastDiscard so game proceeds
+    if (isNextPlayer) {
+      await update(ref(db, `rooms/${roomCode}/game`), { lastDiscard: null, pendingAction: null });
+    }
+    // Other bots (not currentTurn) just pass silently — the next player will clear lastDiscard
     return;
   }
 
-  // --- Bot's own turn ---
-  if (currentTurn !== botPid) return;
+  // --- Bot's own turn (no pending discard from others) ---
+  if (!isNextPlayer || lastTile) return;
   await new Promise(r => setTimeout(r, 600 + Math.random() * 600));
 
-  // Re-read
   const fresh = (await get(ref(db, `rooms/${roomCode}/game`))).val();
-  if (!fresh || fresh.currentTurn !== botPid) return;
+  if (!fresh || fresh.currentTurn !== botPid || fresh.lastDiscard) return;
 
   const freshHand = fresh.hands[botPid] || [];
   const freshMelds = fresh.melds[botPid] || [];
   const expectedLen = 17 - 3 * freshMelds.length;
 
   // Need to draw?
-  if (freshHand.length < expectedLen && !fresh.lastDiscard) {
+  if (freshHand.length < expectedLen) {
     await botDraw(botPid, fresh);
     return;
   }
