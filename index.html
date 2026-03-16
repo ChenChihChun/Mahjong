@@ -673,7 +673,15 @@ async function fireDraw() {
   if (!gameState) return;
   const wall = gameState.wall;
   let idx    = gameState.wallIndex;
-  if (idx >= wall.length) { showToast('牌牆已摸完！'); return; }
+  if (idx >= wall.length) {
+    // Wall exhausted — declare draw (流局)
+    await update(ref(db, `rooms/${roomCode}/game`), {
+      status: 'won',
+      winner: null,
+      winInfo: { tai: 0, breakdown: '流局（牌牆摸完）', isSelfDraw: false, hand: [], discarder: null },
+    });
+    return;
+  }
 
   const hand    = [...(gameState.hands[myPlayerId] || [])];
   const flowers = [...(gameState.flowers[myPlayerId] || [])];
@@ -959,6 +967,16 @@ function updateActionButtons() {
 // WIN SCREEN
 // ============================================================
 function showWinScreen(winInfo, winnerPid) {
+  if (!winnerPid) {
+    el('win-title').textContent      = '流局！';
+    el('win-player-lbl').textContent = winInfo.breakdown || '牌牆摸完';
+    el('win-tai-lbl').textContent    = '';
+    el('win-breakdown').textContent  = '';
+    const handEl = el('win-hand');
+    while (handEl.firstChild) handEl.removeChild(handEl.firstChild);
+    showScreen('screen-win');
+    return;
+  }
   const winner = roomPlayers[winnerPid] || {};
   el('win-title').textContent     = `🎉 ${winner.name || winnerPid} 胡牌！`;
   el('win-player-lbl').textContent = winInfo.isSelfDraw ? '自摸！' : `放槍者：${roomPlayers[winInfo.discarder]?.name || winInfo.discarder || ''}`;
@@ -1429,7 +1447,13 @@ async function runBotTurn(gs, botPid) {
 async function botDraw(botPid, gs) {
   const wall  = gs.wall;
   let idx     = gs.wallIndex;
-  if (idx >= wall.length) return;
+  if (idx >= wall.length) {
+    await update(ref(db, `rooms/${roomCode}/game`), {
+      status: 'won', winner: null,
+      winInfo: { tai: 0, breakdown: '流局（牌牆摸完）', isSelfDraw: false, hand: [], discarder: null },
+    });
+    return;
+  }
   const hand    = [...(gs.hands[botPid] || [])];
   const flowers = [...(gs.flowers[botPid] || [])];
   let tile = wall[idx++];
