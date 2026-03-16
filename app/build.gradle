@@ -2,7 +2,6 @@ plugins {
     id 'com.android.application'
 }
 
-// CI 傳入 BUILD_NUMBER 環境變數；本機 build 預設 0
 def buildNumber = System.getenv("BUILD_NUMBER") ?: "0"
 
 android {
@@ -14,8 +13,17 @@ android {
         minSdk 24
         targetSdk 34
         versionCode buildNumber.toInteger() > 0 ? buildNumber.toInteger() : 1
-        versionName buildNumber   // "7", "8", … 對應 build-7, build-8
+        versionName buildNumber
         buildConfigField "String", "VERSION_NAME", "\"${buildNumber}\""
+    }
+
+    signingConfigs {
+        release {
+            storeFile     file(System.getenv("KEYSTORE_PATH") ?: "mahjong.keystore")
+            storePassword System.getenv("KEYSTORE_PASSWORD") ?: "mahjong123"
+            keyAlias      System.getenv("KEY_ALIAS")         ?: "mahjong"
+            keyPassword   System.getenv("KEYSTORE_PASSWORD") ?: "mahjong123"
+        }
     }
 
     buildFeatures {
@@ -23,8 +31,14 @@ android {
     }
 
     buildTypes {
-        release { minifyEnabled false }
-        debug   { applicationIdSuffix ".debug" }
+        release {
+            minifyEnabled false
+            signingConfig signingConfigs.release
+        }
+        debug {
+            // 不加 applicationIdSuffix，確保 package ID 永遠是 com.mahjong.pk
+            signingConfig signingConfigs.release
+        }
     }
 
     compileOptions {
