@@ -80,19 +80,56 @@ html, body { width: 100%; height: 100%; overflow: hidden; background: #1a4a1a; f
 .dz-bot    { grid-area: bot; }
 .dz-center { grid-area: center; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 4px; }
 
-/* Tile styling */
-.tile { display: inline-flex; align-items: center; justify-content: center; background: linear-gradient(145deg, #fffff0, #e8e8d0); color: #222; border-radius: 4px; border: 1px solid rgba(0,0,0,0.3); box-shadow: 0 2px 4px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.8); font-weight: 700; cursor: pointer; user-select: none; transition: transform 0.12s, box-shadow 0.12s; }
-.tile.small  { width: 22px; height: 30px; font-size: 10px; border-radius: 3px; }
-.tile.medium { width: 34px; height: 46px; font-size: 15px; border-radius: 5px; }
-.tile.large  { width: 44px; height: 60px; font-size: 19px; border-radius: 6px; }
-.tile.selected { transform: translateY(-10px); box-shadow: 0 8px 16px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.8); border-color: #f5c518; }
-.tile.flower { background: linear-gradient(145deg, #fff8e0, #f0e0a0); }
+/* ===== TILE STYLING ===== */
+.tile { display: inline-flex; flex-direction: column; align-items: center; justify-content: center;
+  background: linear-gradient(160deg, #fffff8 0%, #ede8d0 100%);
+  border-radius: 4px; border: 1px solid #b0a080;
+  box-shadow: 0 3px 5px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.9), inset 0 -2px 0 rgba(0,0,0,0.08);
+  cursor: pointer; user-select: none; transition: transform 0.12s, box-shadow 0.12s;
+  position: relative; flex-shrink: 0; }
+.tile.small  { width: 24px; height: 32px; border-radius: 3px; gap: 0; }
+.tile.medium { width: 36px; height: 50px; border-radius: 5px; gap: 1px; }
+.tile.large  { width: 46px; height: 64px; border-radius: 6px; gap: 1px; }
+.tile.selected { transform: translateY(-12px); box-shadow: 0 10px 20px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.9); border-color: #f5c518; outline: 2px solid #f5c518; }
+.tile.flower { background: linear-gradient(160deg, #fffbe8 0%, #f0e0a0 100%); border-color: #c8a050; }
 .tile.discard-last { outline: 2px solid #f5c518; outline-offset: 1px; }
-.suit-m { color: #c00; }
-.suit-p { color: #090; }
-.suit-s { color: #009; }
-.suit-z { color: #550; }
-.suit-f { color: #8a5a00; }
+/* tile inner elements */
+.tile-num  { font-weight: 900; line-height: 1; }
+.tile-suit { line-height: 1; font-weight: 700; }
+.tile-honor { font-weight: 900; line-height: 1; }
+/* small */
+.tile.small .tile-num  { font-size: 10px; }
+.tile.small .tile-suit { font-size: 8px; }
+.tile.small .tile-honor { font-size: 10px; }
+/* medium */
+.tile.medium .tile-num  { font-size: 15px; }
+.tile.medium .tile-suit { font-size: 11px; }
+.tile.medium .tile-honor { font-size: 14px; }
+/* large */
+.tile.large .tile-num  { font-size: 20px; }
+.tile.large .tile-suit { font-size: 13px; }
+.tile.large .tile-honor { font-size: 18px; }
+/* suit colours */
+.suit-m { color: #cc0000; }
+.suit-p { color: #007700; }
+.suit-s { color: #0044cc; }
+.suit-z { color: #665500; }
+.suit-f { color: #996600; }
+
+/* ===== LANDSCAPE ===== */
+@media (orientation: landscape) {
+  .discard-area { inset: 80px 120px 130px 120px; }
+  .avatar-corner.p-bot-left, .avatar-corner.p-bot-right { bottom: 125px; }
+  .tile.large  { width: 36px; height: 50px; }
+  .tile.large .tile-num  { font-size: 15px; }
+  .tile.large .tile-suit { font-size: 11px; }
+  .tile.large .tile-honor { font-size: 14px; }
+  .hand-area { padding: 4px 6px 2px; }
+  .hand-tiles { min-height: 56px; }
+  .action-bar { padding: 4px 6px 6px; }
+  .action-btn { padding: 7px 4px; font-size: 0.9rem; }
+  .avatar-face { width: 60px; height: 60px; font-size: 1.6rem; }
+}
 
 /* Hand area */
 .hand-area { background: rgba(0,0,0,0.4); border-top: 2px solid rgba(255,255,255,0.15); padding: 8px 8px 4px; }
@@ -333,6 +370,7 @@ const EMOJI_AVATARS = ['🐲','🐯','🦊','🐼'];
 const SUIT_LABELS   = { m:'萬', p:'筒', s:'索' };
 const WIND_LABELS   = { '1z':'東','2z':'南','3z':'西','4z':'北','5z':'白','6z':'發','7z':'中' };
 const FLOWER_LABELS = ['','梅','蘭','菊','竹','春','夏','秋','冬'];
+// (SUIT_SYMBOLS / HONOR_MAP / FLOWER_MAP defined near makeTileEl)
 
 // ============================================================
 // STATE
@@ -402,14 +440,52 @@ function tileSuitClass(t) {
   return s === 'm' ? 'suit-m' : s === 'p' ? 'suit-p' : s === 's' ? 'suit-s' : 'suit-z';
 }
 
+// Suit display symbols
+const SUIT_SYMBOLS = { m: '萬', p: '筒', s: '索' };
+const HONOR_MAP = {
+  '1z':'東','2z':'南','3z':'西','4z':'北',
+  '5z':'白','6z':'發','7z':'中'
+};
+const FLOWER_MAP = ['','梅','蘭','菊','竹','春','夏','秋','冬'];
+
 function makeTileEl(t, size = 'medium', extra = '') {
   const div = document.createElement('div');
-  div.className = ['tile', size, isFlower(t) ? 'flower' : '', extra].filter(Boolean).join(' ');
+  const flr = isFlower(t);
+  div.className = ['tile', size, flr ? 'flower' : '', extra].filter(Boolean).join(' ');
   div.dataset.tile = t;
-  const span = document.createElement('span');
-  span.className = tileSuitClass(t);
-  span.textContent = tileLabel(t);
-  div.appendChild(span);
+
+  if (!t) return div;
+  const suit = t[1];
+
+  if (suit === 'm' || suit === 'p' || suit === 's') {
+    // Numbered suit tile — show number on top, suit below
+    const numEl  = document.createElement('div');
+    numEl.className = 'tile-num ' + tileSuitClass(t);
+    numEl.textContent = t[0];
+    const suitEl = document.createElement('div');
+    suitEl.className = 'tile-suit ' + tileSuitClass(t);
+    suitEl.textContent = SUIT_SYMBOLS[suit];
+    div.appendChild(numEl);
+    div.appendChild(suitEl);
+  } else if (suit === 'z') {
+    // Honor tile — single kanji centered
+    const h = document.createElement('div');
+    h.className = 'tile-honor ' + tileSuitClass(t);
+    h.textContent = HONOR_MAP[t] || t;
+    div.appendChild(h);
+  } else if (flr) {
+    // Flower tile
+    const n = parseInt(t[1]);
+    const numEl = document.createElement('div');
+    numEl.className = 'tile-num suit-f';
+    numEl.textContent = n;
+    const lblEl = document.createElement('div');
+    lblEl.className = 'tile-suit suit-f';
+    lblEl.textContent = FLOWER_MAP[n] || '花';
+    div.appendChild(numEl);
+    div.appendChild(lblEl);
+  }
+
   return div;
 }
 
