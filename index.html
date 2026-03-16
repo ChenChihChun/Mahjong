@@ -103,21 +103,15 @@ html, body { width: 100%; height: 100%; overflow: hidden; background: #1a4a1a; f
 }
 .tile.flower { background: linear-gradient(160deg, #fffbe8 0%, #f0e0a0 100%); border-color: #c8a050; }
 .tile.discard-last { outline: 2px solid #f5c518; outline-offset: 1px; }
-/* Unicode tile character */
-.tile-uni { line-height: 1; display: block; }
-.tile.small  .tile-uni { font-size: 18px; }
-.tile.medium .tile-uni { font-size: 28px; }
-.tile.large  .tile-uni { font-size: 36px; }
-/* text fallback */
-.tile-text { font-weight: 900; }
-.tile.small  .tile-text { font-size: 9px; }
-.tile.medium .tile-text { font-size: 13px; }
-.tile.large  .tile-text { font-size: 17px; }
-/* suit colours (for fallback text) */
-.suit-m { color: #cc0000; }
-.suit-p { color: #007700; }
-.suit-s { color: #0044cc; }
-.suit-z { color: #665500; }
+/* Image-based tiles */
+.tile img { width: 100%; height: 100%; object-fit: fill; display: block; border-radius: inherit; }
+/* Flower tile text fallback */
+.tile-flower-lbl { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; height: 100%; font-weight: 900; line-height: 1.1; }
+.tile.small  .tile-flower-lbl { font-size: 8px; }
+.tile.medium .tile-flower-lbl { font-size: 11px; }
+.tile.large  .tile-flower-lbl { font-size: 14px; }
+.tile-flower-lbl .flower-emoji { font-size: 1.6em; }
+/* suit colours for flower text */
 .suit-f { color: #996600; }
 
 /* ===== LANDSCAPE ===== */
@@ -125,7 +119,7 @@ html, body { width: 100%; height: 100%; overflow: hidden; background: #1a4a1a; f
   .discard-area { inset: 70px 110px 120px 110px; }
   .avatar-corner.p-bot-left, .avatar-corner.p-bot-right { bottom: 115px; }
   .tile.large  { width: 38px; height: 52px; }
-  .tile.large  .tile-uni { font-size: 26px; }
+  .tile.large  img { border-radius: 4px; }
   .hand-area   { padding: 4px 6px 2px; }
   .hand-tiles  { min-height: 58px; }
   .action-bar  { padding: 3px 6px 5px; }
@@ -448,17 +442,24 @@ function tileSuitClass(t) {
 
 // Suit display symbols
 // Unicode 麻將牌對照表
-const TILE_UNICODE = {
-  '1m':'🀇','2m':'🀈','3m':'🀉','4m':'🀊','5m':'🀋','6m':'🀌','7m':'🀍','8m':'🀎','9m':'🀏',
-  '1p':'🀙','2p':'🀚','3p':'🀛','4p':'🀜','5p':'🀝','6p':'🀞','7p':'🀟','8p':'🀠','9p':'🀡',
-  '1s':'🀐','2s':'🀑','3s':'🀒','4s':'🀓','5s':'🀔','6s':'🀕','7s':'🀖','8s':'🀗','9s':'🀘',
-  '1z':'🀀','2z':'🀁','3z':'🀂','4z':'🀃',
-  '7z':'🀄','6z':'🀅','5z':'🀆',
+// jsDelivr CDN: FluffyStuff riichi-mahjong-tiles
+const TILE_IMG_BASE = 'https://cdn.jsdelivr.net/gh/FluffyStuff/riichi-mahjong-tiles@master/Regular/';
+const TILE_IMG = {
+  '1m':'Man1','2m':'Man2','3m':'Man3','4m':'Man4','5m':'Man5','6m':'Man6','7m':'Man7','8m':'Man8','9m':'Man9',
+  '1p':'Pin1','2p':'Pin2','3p':'Pin3','4p':'Pin4','5p':'Pin5','6p':'Pin6','7p':'Pin7','8p':'Pin8','9p':'Pin9',
+  '1s':'Sou1','2s':'Sou2','3s':'Sou3','4s':'Sou4','5s':'Sou5','6s':'Sou6','7s':'Sou7','8s':'Sou8','9s':'Sou9',
+  '1z':'East','2z':'South','3z':'West','4z':'North',
+  '5z':'Haku','6z':'Hatsu','7z':'Chun',
+};
+const FLOWER_EMOJI = {
   'f1':'🌸','f2':'🌺','f3':'🌼','f4':'🎋','f5':'🌱','f6':'☀️','f7':'🍂','f8':'❄️',
+};
+const FLOWER_LABEL = {
+  'f1':'梅','f2':'蘭','f3':'菊','f4':'竹','f5':'春','f6':'夏','f7':'秋','f8':'冬',
 };
 const TILE_LABEL = {
   '1z':'東','2z':'南','3z':'西','4z':'北','5z':'白','6z':'發','7z':'中',
-  'f1':'梅','f2':'蘭','f3':'菊','f4':'竹','f5':'春','f6':'夏','f7':'秋','f8':'冬',
+  ...FLOWER_LABEL,
 };
 
 function makeTileEl(t, size = 'medium', extra = '') {
@@ -468,17 +469,26 @@ function makeTileEl(t, size = 'medium', extra = '') {
   div.dataset.tile = t;
   if (!t) return div;
 
-  const uniChar = TILE_UNICODE[t];
-  const uni = document.createElement('div');
-  uni.className = 'tile-uni';
-  if (uniChar) {
-    uni.textContent = uniChar;
+  const imgName = TILE_IMG[t];
+  if (imgName) {
+    const img = document.createElement('img');
+    img.src = TILE_IMG_BASE + imgName + '.png';
+    img.alt = t;
+    img.draggable = false;
+    div.appendChild(img);
   } else {
-    // fallback: number + suit text
-    uni.textContent = tileLabel(t);
-    uni.className = 'tile-uni tile-text ' + tileSuitClass(t);
+    // Flower tiles: emoji + Chinese label
+    const lbl = document.createElement('div');
+    lbl.className = 'tile-flower-lbl suit-f';
+    const em = document.createElement('span');
+    em.className = 'flower-emoji';
+    em.textContent = FLOWER_EMOJI[t] || '🌸';
+    const tx = document.createElement('span');
+    tx.textContent = FLOWER_LABEL[t] || t;
+    lbl.appendChild(em);
+    lbl.appendChild(tx);
+    div.appendChild(lbl);
   }
-  div.appendChild(uni);
   return div;
 }
 
