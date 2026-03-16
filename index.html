@@ -936,7 +936,7 @@ function updateActionButtons() {
   const myMelds  = melds[myPlayerId] || [];
   const lastTile = lastDiscard?.tile;
   const lastBy   = lastDiscard?.by;
-  const canClaim = !!lastTile && lastBy !== myPlayerId && !isMyTurn;
+  const canClaim = !!lastTile && lastBy !== myPlayerId;
 
   const chowOpts = canClaim ? canChow(myHand, lastTile, lastBy) : [];
   pendingChowOptions = chowOpts;
@@ -944,10 +944,11 @@ function updateActionButtons() {
   el('btn-pong').disabled     = !(canClaim && canPong(myHand, lastTile));
   el('btn-chow').disabled     = chowOpts.length === 0;
   el('btn-kong').disabled     = !((canClaim && getKongOptions(myHand, lastTile, myMelds).some(k => k.type === '明槓'))
-                               || (isMyTurn && getKongOptions(myHand, null, myMelds).some(k => k.type !== '明槓')));
+                               || (isMyTurn && !lastTile && getKongOptions(myHand, null, myMelds).some(k => k.type !== '明槓')));
   el('btn-win-claim').disabled = !((canClaim && canWin([...myHand, lastTile], myMelds))
-                               || (isMyTurn && canWin(myHand, myMelds)));
-  el('btn-discard').disabled  = !(isMyTurn && selectedTileIdx !== null);
+                               || (isMyTurn && !lastTile && canWin(myHand, myMelds)));
+  // Can discard only if it's my turn AND no pending claim (lastDiscard cleared)
+  el('btn-discard').disabled  = !(isMyTurn && !lastTile && selectedTileIdx !== null);
   el('btn-skip').disabled     = !canClaim;
 }
 
@@ -1165,15 +1166,24 @@ function listenToGame() {
     const isMyTurn  = currentTurn === myPlayerId;
     const myHand    = (gameState.hands  || {})[myPlayerId] || [];
     const myMelds   = (gameState.melds  || {})[myPlayerId] || [];
-    const canClaim  = !!lastDiscard && lastDiscard.by !== myPlayerId && !isMyTurn;
+    // canClaim: anyone except the discarder can claim (including the "next" player)
+    const canClaim  = !!lastDiscard && lastDiscard.by !== myPlayerId;
 
     if (canClaim) {
       const lastTile   = lastDiscard.tile;
       const hasAction  = canPong(myHand, lastTile)
                       || canChow(myHand, lastTile, lastDiscard.by).length > 0
                       || canWin([...myHand, lastTile], myMelds);
-      if (hasAction) startActionTimer(8, () => fireSkip());
-      else stopActionTimer();
+      if (hasAction) {
+        startActionTimer(8, () => fireSkip());
+      } else {
+        // No claimable action — auto-pass after a short delay so game doesn't get stuck
+        stopActionTimer();
+        setTimeout(() => {
+          if (gameState?.lastDiscard?.by === lastDiscard.by && gameState?.lastDiscard?.tile === lastDiscard.tile)
+            fireSkip();
+        }, 600);
+      }
     } else {
       stopActionTimer();
     }
@@ -1182,7 +1192,7 @@ function listenToGame() {
     if (isMyTurn && !lastDiscard) {
       const myHandNow = gameState.hands[myPlayerId] || [];
       // Only auto-draw if hand is short (haven't drawn yet this turn)
-      const expectedLen = (4 - (gameState.melds[myPlayerId]||[]).length) * 3 + 2;
+      const expectedLen = 17 - 3 * (gameState.melds[myPlayerId]||[]).length;
       if (myHandNow.length < expectedLen) {
         setTimeout(() => {
           if (gameState?.currentTurn === myPlayerId && !gameState?.lastDiscard) fireDraw();
@@ -1383,7 +1393,7 @@ async function runBotTurn(gs, botPid) {
 
   const freshHand = fresh.hands[botPid] || [];
   const freshMelds = fresh.melds[botPid] || [];
-  const expectedLen = (4 - freshMelds.length) * 3 + 2;
+  const expectedLen = 17 - 3 * freshMelds.length;
 
   // Need to draw?
   if (freshHand.length < expectedLen && !fresh.lastDiscard) {
