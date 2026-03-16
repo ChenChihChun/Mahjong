@@ -2,6 +2,9 @@ plugins {
     id 'com.android.application'
 }
 
+// CI 傳入 BUILD_NUMBER 環境變數；本機 build 預設 0
+def buildNumber = System.getenv("BUILD_NUMBER") ?: "0"
+
 android {
     compileSdk 34
     namespace 'com.mahjong.pk'
@@ -10,26 +13,24 @@ android {
         applicationId "com.mahjong.pk"
         minSdk 24
         targetSdk 34
-        versionCode 1
-        versionName "1.0"
+        versionCode buildNumber.toInteger() > 0 ? buildNumber.toInteger() : 1
+        versionName buildNumber   // "7", "8", … 對應 build-7, build-8
+        buildConfigField "String", "VERSION_NAME", "\"${buildNumber}\""
+    }
+
+    buildFeatures {
+        buildConfig true
     }
 
     buildTypes {
-        release {
-            minifyEnabled false
-        }
-        debug {
-            applicationIdSuffix ".debug"
-        }
+        release { minifyEnabled false }
+        debug   { applicationIdSuffix ".debug" }
     }
 
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
     }
-
-    // Copy web assets into Android assets folder at build time
-    // (handled by CI workflow)
 }
 
 dependencies {
