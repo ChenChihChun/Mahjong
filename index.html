@@ -767,7 +767,12 @@ function stopActionTimer() {
 // ============================================================
 function renderGameBoard() {
   if (!gameState) return;
-  const { hands, discards, melds, flowers, currentTurn, lastDiscard, wallIndex, wall, round } = gameState;
+  // Firebase 會丟棄空陣列，所以要補預設值
+  const hands    = gameState.hands    || { p1:[], p2:[], p3:[], p4:[] };
+  const discards = gameState.discards || { p1:[], p2:[], p3:[], p4:[] };
+  const melds    = gameState.melds    || { p1:[], p2:[], p3:[], p4:[] };
+  const flowers  = gameState.flowers  || { p1:[], p2:[], p3:[], p4:[] };
+  const { currentTurn, lastDiscard, wallIndex, wall, round } = gameState;
   const wallLeft = (wall || []).length - (wallIndex || 0);
 
   txt('center-wind',  WINDS[(round || 1) - 1] || '東');
@@ -810,9 +815,9 @@ function renderGameBoard() {
 
 function renderMyHand() {
   if (!gameState) return;
-  const hand    = sortTiles(gameState.hands[myPlayerId] || []);
-  const myMelds = gameState.melds[myPlayerId] || [];
-  const myFlows = gameState.flowers[myPlayerId] || [];
+  const hand    = sortTiles((gameState.hands    || {})[myPlayerId] || []);
+  const myMelds = ((gameState.melds    || {})[myPlayerId] || []);
+  const myFlows = ((gameState.flowers  || {})[myPlayerId] || []);
 
   const tilesContainer = el('hand-tiles');
   while (tilesContainer.firstChild) tilesContainer.removeChild(tilesContainer.firstChild);
@@ -1020,12 +1025,14 @@ async function beginGame(roomData) {
 
   if (isHost && (!roomData.game || roomData.game.status !== 'playing')) {
     await dealAndPushGame();
+    startBotBrain();   // host 路徑也要啟動 bot
     return;
   }
 
   listenToGame();
-  if (isHost) startBotBrain();
+  if (isHost) startBotBrain();  // 非 host 路徑
 }
+
 
 async function dealAndPushGame() {
   const wall = buildWall();
@@ -1077,8 +1084,8 @@ function listenToGame() {
 
     const { currentTurn, lastDiscard } = gameState;
     const isMyTurn  = currentTurn === myPlayerId;
-    const myHand    = gameState.hands[myPlayerId] || [];
-    const myMelds   = gameState.melds[myPlayerId] || [];
+    const myHand    = (gameState.hands  || {})[myPlayerId] || [];
+    const myMelds   = (gameState.melds  || {})[myPlayerId] || [];
     const canClaim  = !!lastDiscard && lastDiscard.by !== myPlayerId && !isMyTurn;
 
     if (canClaim) {
