@@ -59,88 +59,86 @@ html, body { width: 100%; height: 100%; overflow: hidden; background: #1a4a1a; f
 .lobby-back-btn { background: none; border: none; color: #9ab; font-size: 0.9rem; cursor: pointer; margin-top: 8px; }
 .lobby-bot-btn { width: 100%; max-width: 400px; padding: 12px; font-size: 1rem; font-weight: 700; background: linear-gradient(135deg, #5a4a8a, #3a2a6a); color: #fff; border: 2px solid #8a7aaa; border-radius: 12px; cursor: pointer; margin-bottom: 8px; }
 
+/* ===== RESPONSIVE TILE SIZE VARS (vmin = smaller of vw/vh; in landscape = screen height) ===== */
+:root {
+  --tw-sm: min(5.5vmin, 26px);   --th-sm: min(7.5vmin, 34px);
+  --tw-md: min(8.5vmin, 40px);   --th-md: min(11.5vmin, 54px);
+  --tw-lg: min(10.5vmin, 50px);  --th-lg: min(14.5vmin, 68px);
+  --avatar-sz: min(8.5vmin, 46px);
+}
+
 /* ===== GAME SCREEN ===== */
 #screen-game { background: #1a5a1a; padding: 0; justify-content: flex-start; }
-.game-wrap { width: 100%; height: 100%; display: grid; grid-template-rows: 1fr auto; }
-.game-board { position: relative; flex: 1; overflow: hidden; }
+.game-wrap { width: 100%; height: 100%; display: grid; grid-template-rows: 1fr auto; overflow: hidden; }
+.game-board { position: relative; overflow: hidden; min-height: 0; }
 
-/* Avatar corners */
-.avatar-corner { position: absolute; display: flex; flex-direction: column; align-items: center; gap: 4px; z-index: 10; }
-.avatar-corner.p-top-left  { top: 4px; left: 4px; }
-.avatar-corner.p-top-right { top: 4px; right: 4px; }
-.avatar-corner.p-bot-left  { bottom: 165px; left: 4px; }
-.avatar-corner.p-bot-right { bottom: 165px; right: 4px; }
-.avatar-face { width: 80px; height: 80px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.4); background: #222; display: flex; align-items: center; justify-content: center; font-size: 2.2rem; }
-.avatar-name-lbl { font-size: 0.7rem; font-weight: 700; text-shadow: 0 1px 3px #000; max-width: 80px; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.avatar-score-lbl { font-size: 0.65rem; color: #f5c518; }
+/* Avatar corners — vmin-based so they scale with screen */
+.avatar-corner { position: absolute; display: flex; flex-direction: column; align-items: center; gap: 2px; z-index: 10; }
+.avatar-corner.p-top-left  { top: 2px; left: 2px; }
+.avatar-corner.p-top-right { top: 2px; right: 2px; }
+.avatar-corner.p-bot-left  { bottom: 2px; left: 2px; }
+.avatar-corner.p-bot-right { bottom: 2px; right: 2px; }
+.avatar-face { width: var(--avatar-sz); height: var(--avatar-sz); border-radius: 50%; border: 2px solid rgba(255,255,255,0.4); background: #222; display: flex; align-items: center; justify-content: center; font-size: calc(var(--avatar-sz) * 0.5); }
+.avatar-name-lbl { font-size: min(1.8vmin, 9px); font-weight: 700; text-shadow: 0 1px 3px #000; max-width: 52px; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.avatar-score-lbl { font-size: min(1.6vmin, 8px); color: #f5c518; }
 
-/* Discard zones */
-.discard-area { position: absolute; inset: 100px 100px 185px 100px; display: grid; grid-template-areas: ". top ." "left center right" ". bot ."; grid-template-columns: 1fr 2fr 1fr; grid-template-rows: 1fr 2fr 1fr; gap: 4px; }
-.discard-zone { display: flex; flex-wrap: wrap; align-content: flex-start; gap: 2px; padding: 4px; border-radius: 6px; background: rgba(0,0,0,0.1); }
+/* Discard zones — inset leaves room for corner avatars */
+.discard-area { position: absolute; inset: calc(var(--avatar-sz) + 6px); display: grid; grid-template-areas: ". top ." "left center right" ". bot ."; grid-template-columns: 1fr 2fr 1fr; grid-template-rows: 1fr 2fr 1fr; gap: 3px; }
+.discard-zone { display: flex; flex-wrap: wrap; align-content: flex-start; gap: 1px; padding: 2px; border-radius: 4px; background: rgba(0,0,0,0.1); overflow: hidden; }
 .dz-top    { grid-area: top; }
 .dz-left   { grid-area: left; }
 .dz-right  { grid-area: right; }
 .dz-bot    { grid-area: bot; }
-.dz-center { grid-area: center; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 4px; }
+.dz-center { grid-area: center; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 3px; }
 
-/* ===== TILE STYLING ===== */
+/* ===== TILE STYLING — CSS rendered, no external images ===== */
 .tile {
   display: inline-flex; align-items: center; justify-content: center;
   background: linear-gradient(160deg, #fffff8 0%, #ede8d0 100%);
-  border-radius: 4px; border: 1px solid #b0a080;
-  box-shadow: 0 3px 6px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.95), inset 0 -2px 0 rgba(0,0,0,0.1);
+  border-radius: 3px; border: 1px solid #b0a080;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.95), inset 0 -1px 0 rgba(0,0,0,0.1);
   cursor: pointer; user-select: none;
   transition: transform 0.12s, box-shadow 0.12s;
-  position: relative; flex-shrink: 0;
+  position: relative; flex-shrink: 0; overflow: hidden;
 }
-.tile.small  { width: 26px;  height: 34px;  border-radius: 3px; }
-.tile.medium { width: 40px;  height: 54px;  border-radius: 5px; }
-.tile.large  { width: 52px;  height: 70px;  border-radius: 6px; }
-.tile.selected {
-  transform: translateY(-14px);
-  box-shadow: 0 12px 24px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.95);
-  border-color: #f5c518; outline: 2px solid #f5c518;
-}
+.tile.small  { width: var(--tw-sm); height: var(--th-sm); font-size: calc(var(--th-sm) * 0.38); }
+.tile.medium { width: var(--tw-md); height: var(--th-md); font-size: calc(var(--th-md) * 0.38); }
+.tile.large  { width: var(--tw-lg); height: var(--th-lg); font-size: calc(var(--th-lg) * 0.38); }
+.tile.selected { transform: translateY(-10px); box-shadow: 0 10px 20px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.95); border-color: #f5c518; outline: 2px solid #f5c518; }
 .tile.flower { background: linear-gradient(160deg, #fffbe8 0%, #f0e0a0 100%); border-color: #c8a050; }
 .tile.discard-last { outline: 2px solid #f5c518; outline-offset: 1px; }
-/* Image-based tiles */
-.tile img { width: 100%; height: 100%; object-fit: fill; display: block; border-radius: inherit; }
-/* Flower tile text fallback */
-.tile-flower-lbl { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; height: 100%; font-weight: 900; line-height: 1.1; }
-.tile.small  .tile-flower-lbl { font-size: 8px; }
-.tile.medium .tile-flower-lbl { font-size: 11px; }
-.tile.large  .tile-flower-lbl { font-size: 14px; }
-.tile-flower-lbl .flower-emoji { font-size: 1.6em; }
-/* suit colours for flower text */
-.suit-f { color: #996600; }
-
-/* ===== LANDSCAPE ===== */
-@media (orientation: landscape) {
-  .discard-area { inset: 70px 110px 120px 110px; }
-  .avatar-corner.p-bot-left, .avatar-corner.p-bot-right { bottom: 115px; }
-  .tile.large  { width: 38px; height: 52px; }
-  .tile.large  img { border-radius: 4px; }
-  .hand-area   { padding: 4px 6px 2px; }
-  .hand-tiles  { min-height: 58px; }
-  .action-bar  { padding: 3px 6px 5px; }
-  .action-btn  { padding: 6px 4px; font-size: 0.85rem; min-width: 46px; }
-  .avatar-face { width: 56px; height: 56px; font-size: 1.5rem; }
-}
+/* CSS tile inner layout */
+.tile-body { display:flex; flex-direction:column; align-items:center; justify-content:center; width:100%; height:100%; line-height:1; gap: 0; }
+.tile-top  { font-weight:900; line-height:1; font-size:1em; }
+.tile-bot  { font-weight:700; line-height:1; font-size:0.7em; margin-top:-0.05em; }
+.tile-full { font-weight:900; line-height:1; font-size:1.25em; display:flex; align-items:center; justify-content:center; width:100%; height:100%; }
+/* Tile suit colours */
+.c-man { color:#cc1100; }  .c-pin { color:#006633; }  .c-sou { color:#003399; }
+.c-wind { color:#222; }
+.c-haku { color:#333; width:65%; height:65%; border:2px solid #888; border-radius:2px; font-size:0; } /* blank white dragon */
+.c-hatsu { color:#006633; }   .c-chun { color:#cc1100; }
+.c-flower { color:#885500; }
 
 /* Hand area */
-.hand-area { background: rgba(0,0,0,0.4); border-top: 2px solid rgba(255,255,255,0.15); padding: 8px 8px 4px; }
-.hand-tiles { display: flex; flex-wrap: nowrap; gap: 3px; overflow-x: auto; padding-bottom: 4px; min-height: 68px; align-items: flex-end; scrollbar-width: none; }
+.hand-area { background: rgba(0,0,0,0.4); border-top: 2px solid rgba(255,255,255,0.15); padding: 4px 6px 2px; }
+.hand-tiles { display: flex; flex-wrap: nowrap; gap: 2px; overflow-x: auto; padding-bottom: 3px; min-height: calc(var(--th-lg) + 4px); align-items: flex-end; scrollbar-width: none; }
 .hand-tiles::-webkit-scrollbar { display: none; }
-.hand-melds { display: flex; gap: 6px; margin-top: 4px; flex-wrap: wrap; }
-.meld-group { display: flex; gap: 2px; background: rgba(255,255,255,0.1); border-radius: 4px; padding: 3px 3px 1px; align-items: flex-end; }
-.meld-type-lbl { font-size: 0.55rem; color: #aaa; display: block; text-align: center; }
-.hand-flowers { display: flex; gap: 2px; margin-top: 4px; }
+.hand-melds { display: flex; gap: 4px; margin-top: 3px; flex-wrap: wrap; }
+.meld-group { display: flex; gap: 1px; background: rgba(255,255,255,0.1); border-radius: 3px; padding: 2px; align-items: flex-end; }
+.meld-type-lbl { font-size: 0.5rem; color: #aaa; display: block; text-align: center; }
+.hand-flowers { display: flex; gap: 2px; margin-top: 3px; }
 
 /* Action buttons */
-.action-bar { display: flex; gap: 6px; padding: 6px 8px 8px; background: rgba(0,0,0,0.5); flex-wrap: wrap; }
-.action-btn { flex: 1; min-width: 55px; padding: 10px 4px; font-size: 1rem; font-weight: 700; border: none; border-radius: 8px; cursor: pointer; transition: transform 0.1s, opacity 0.1s; }
+.action-bar { display: flex; gap: 4px; padding: 4px 6px 6px; background: rgba(0,0,0,0.5); flex-wrap: nowrap; }
+.action-btn { flex: 1; padding: 7px 2px; font-size: min(3.8vmin, 16px); font-weight: 700; border: none; border-radius: 7px; cursor: pointer; transition: transform 0.1s, opacity 0.1s; white-space: nowrap; }
 .action-btn:active { transform: scale(0.95); }
 .action-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+/* Portrait mode — show rotate hint */
+#rotate-hint { display:none; position:fixed; inset:0; background:#0f2f0f; z-index:9999; flex-direction:column; align-items:center; justify-content:center; gap:16px; font-size:1.3rem; text-align:center; pointer-events:none; }
+#rotate-hint .rotate-icon { font-size:3rem; animation: spin90 1.5s ease-in-out infinite alternate; }
+@keyframes spin90 { from { transform: rotate(0deg); } to { transform: rotate(90deg); } }
+@media (orientation: portrait) { #rotate-hint { display:flex; } }
 .btn-pong    { background: linear-gradient(135deg, #4a90d9, #2a70b9); color: #fff; }
 .btn-chow    { background: linear-gradient(135deg, #5ab85a, #3a983a); color: #fff; }
 .btn-kong    { background: linear-gradient(135deg, #d9844a, #b96030); color: #fff; }
@@ -191,9 +189,9 @@ html, body { width: 100%; height: 100%; overflow: hidden; background: #1a4a1a; f
 .center-round-lbl { font-size: 0.75rem; color: #aaa; }
 .center-wall-lbl  { font-size: 0.85rem; color: #f5c518; }
 
-@media (min-width: 600px) {
-  .tile.large { width: 50px; height: 68px; font-size: 22px; }
-  .avatar-face { width: 100px; height: 100px; font-size: 2.8rem; }
+/* Larger screen tweaks (tablets / desktop) */
+@media (min-width: 700px) {
+  :root { --tw-lg: 52px; --th-lg: 72px; --avatar-sz: 52px; }
 }
 </style>
 </head>
@@ -208,6 +206,13 @@ html, body { width: 100%; height: 100%; overflow: hidden; background: #1a4a1a; f
 
 <!-- Toast -->
 <div class="toast" id="toast"></div>
+
+<!-- Portrait rotation hint -->
+<div id="rotate-hint">
+  <div class="rotate-icon">📱</div>
+  <div>請將手機旋轉至橫向</div>
+  <div style="font-size:0.85rem;color:#6a9;margin-top:4px;">Please rotate to landscape</div>
+</div>
 
 <!-- ===== HOME SCREEN ===== -->
 <div class="screen" id="screen-home">
@@ -398,6 +403,10 @@ function txt(id, text) { el(id).textContent = text; }
 function showScreen(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   el(id).classList.add('active');
+  // Lock to landscape when entering game/lobby screens
+  if (id === 'screen-game' || id === 'screen-lobby') {
+    try { screen.orientation?.lock('landscape').catch(() => {}); } catch(e) {}
+  }
 }
 
 let toastTimer = null;
@@ -442,24 +451,13 @@ function tileSuitClass(t) {
 
 // Suit display symbols
 // Unicode 麻將牌對照表
-// jsDelivr CDN: FluffyStuff riichi-mahjong-tiles
-const TILE_IMG_BASE = 'https://cdn.jsdelivr.net/gh/FluffyStuff/riichi-mahjong-tiles@master/Regular/';
-const TILE_IMG = {
-  '1m':'Man1','2m':'Man2','3m':'Man3','4m':'Man4','5m':'Man5','6m':'Man6','7m':'Man7','8m':'Man8','9m':'Man9',
-  '1p':'Pin1','2p':'Pin2','3p':'Pin3','4p':'Pin4','5p':'Pin5','6p':'Pin6','7p':'Pin7','8p':'Pin8','9p':'Pin9',
-  '1s':'Sou1','2s':'Sou2','3s':'Sou3','4s':'Sou4','5s':'Sou5','6s':'Sou6','7s':'Sou7','8s':'Sou8','9s':'Sou9',
-  '1z':'East','2z':'South','3z':'West','4z':'North',
-  '5z':'Haku','6z':'Hatsu','7z':'Chun',
-};
-const FLOWER_EMOJI = {
-  'f1':'🌸','f2':'🌺','f3':'🌼','f4':'🎋','f5':'🌱','f6':'☀️','f7':'🍂','f8':'❄️',
-};
-const FLOWER_LABEL = {
-  'f1':'梅','f2':'蘭','f3':'菊','f4':'竹','f5':'春','f6':'夏','f7':'秋','f8':'冬',
-};
-const TILE_LABEL = {
+// CSS-based tile rendering — no external images needed
+const MAN_CHARS   = ['一','二','三','四','五','六','七','八','九'];
+const HONOR_CHARS = {'1z':'東','2z':'南','3z':'西','4z':'北','5z':'白','6z':'發','7z':'中'};
+const FLOWER_CHARS= {'f1':'梅','f2':'蘭','f3':'菊','f4':'竹','f5':'春','f6':'夏','f7':'秋','f8':'冬'};
+const TILE_LABEL  = {
   '1z':'東','2z':'南','3z':'西','4z':'北','5z':'白','6z':'發','7z':'中',
-  ...FLOWER_LABEL,
+  'f1':'梅','f2':'蘭','f3':'菊','f4':'竹','f5':'春','f6':'夏','f7':'秋','f8':'冬',
 };
 
 function makeTileEl(t, size = 'medium', extra = '') {
@@ -469,26 +467,34 @@ function makeTileEl(t, size = 'medium', extra = '') {
   div.dataset.tile = t;
   if (!t) return div;
 
-  const imgName = TILE_IMG[t];
-  if (imgName) {
-    const img = document.createElement('img');
-    img.src = TILE_IMG_BASE + imgName + '.png';
-    img.alt = t;
-    img.draggable = false;
-    div.appendChild(img);
+  const body = document.createElement('div');
+  body.className = 'tile-body';
+
+  const suit = t[1];
+  if (suit === 'm') {
+    const top = document.createElement('span'); top.className = 'tile-top c-man'; top.textContent = MAN_CHARS[parseInt(t[0]) - 1];
+    const bot = document.createElement('span'); bot.className = 'tile-bot c-man'; bot.textContent = '萬';
+    body.appendChild(top); body.appendChild(bot);
+  } else if (suit === 'p') {
+    const top = document.createElement('span'); top.className = 'tile-top c-pin'; top.textContent = t[0];
+    const bot = document.createElement('span'); bot.className = 'tile-bot c-pin'; bot.textContent = '筒';
+    body.appendChild(top); body.appendChild(bot);
+  } else if (suit === 's') {
+    const top = document.createElement('span'); top.className = 'tile-top c-sou'; top.textContent = t[0];
+    const bot = document.createElement('span'); bot.className = 'tile-bot c-sou'; bot.textContent = '索';
+    body.appendChild(top); body.appendChild(bot);
+  } else if (suit === 'z') {
+    const cls = {'5z':'c-haku','6z':'c-hatsu','7z':'c-chun'}[t] || 'c-wind';
+    const full = document.createElement('span'); full.className = 'tile-full ' + cls;
+    if (t !== '5z') full.textContent = HONOR_CHARS[t] || t; // 白 shows as empty box via CSS
+    body.appendChild(full);
   } else {
-    // Flower tiles: emoji + Chinese label
-    const lbl = document.createElement('div');
-    lbl.className = 'tile-flower-lbl suit-f';
-    const em = document.createElement('span');
-    em.className = 'flower-emoji';
-    em.textContent = FLOWER_EMOJI[t] || '🌸';
-    const tx = document.createElement('span');
-    tx.textContent = FLOWER_LABEL[t] || t;
-    lbl.appendChild(em);
-    lbl.appendChild(tx);
-    div.appendChild(lbl);
+    // Flower
+    const full = document.createElement('span'); full.className = 'tile-full c-flower';
+    full.textContent = FLOWER_CHARS[t] || t;
+    body.appendChild(full);
   }
+  div.appendChild(body);
   return div;
 }
 
