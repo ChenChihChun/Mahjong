@@ -971,7 +971,9 @@ function renderGameBoard() {
   const { currentTurn, lastDiscard, wallIndex, wall, round } = gameState;
   const wallLeft = (wall || []).length - (wallIndex || 0);
 
-  txt('center-wind',  WINDS[(round || 1) - 1] || '東');
+  const dealerIdx = PLAYER_IDS.indexOf(gameState.dealer || 'p1');
+  const myRelSeat = (PLAYER_IDS.indexOf(myPlayerId) - dealerIdx + 4) % 4;
+  txt('center-wind',  WINDS[myRelSeat] || '東');
   txt('center-round', `第${round || 1}局`);
   txt('center-wall',  `牌牆: ${wallLeft}`);
 
@@ -984,7 +986,8 @@ function renderGameBoard() {
     const pid   = relToAbs(rel);
     const pData = roomPlayers[pid] || {};
     el(`avatar-face-${ci}`).textContent  = EMOJI_AVATARS[pData.avatarIdx || 0];
-    el(`avatar-name-${ci}`).textContent  = pData.name || pid;
+    const dealerMark = pid === gameState.dealer ? '莊 ' : '';
+    el(`avatar-name-${ci}`).textContent  = dealerMark + (pData.name || pid);
     el(`avatar-score-${ci}`).textContent = `${scores[pid] || 0}分`;
     const corner = el(`corner-${ci}`);
     corner.style.outline      = pid === currentTurn ? '2px solid #f5c518' : '';

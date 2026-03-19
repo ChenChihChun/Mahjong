@@ -17,3 +17,4 @@
 - fix: discard win scoring now correctly doubles when dealer is involved (was ignoring dealerInvolved)
 - feat: 暗槓 bonus scoring +1台 each in calcTai
 - feat: win screen now shows score changes for all players after each game
+- feat: show dealer marker (莊) on avatar name and display player's seat wind in center
