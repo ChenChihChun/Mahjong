@@ -96,7 +96,7 @@ html, body { width: 100%; height: 100%; overflow: hidden; background: #1a4a1a; f
 .p-top-right .tile-backs, .p-bot-left .tile-backs { flex-direction: column; max-height: calc(var(--avatar-sz) * 2); overflow: hidden; }
 
 /* Discard zones — top/bottom inset clears avatar+name+score, left/right clears avatar width */
-.discard-area { position: absolute; inset: calc(var(--avatar-sz) + 22px) calc(var(--avatar-sz) + 6px); display: grid; grid-template-areas: ". top ." "left center right" ". bot ."; grid-template-columns: 1fr 2fr 1fr; grid-template-rows: 1fr 1.5fr 1fr; gap: 3px; border: 3px solid rgba(120,100,60,0.4); border-radius: 10px; background: linear-gradient(135deg, rgba(20,60,80,0.25) 0%, rgba(10,40,60,0.15) 100%); box-shadow: inset 0 0 40px rgba(0,0,0,0.2), 0 2px 8px rgba(0,0,0,0.3); padding: 4px; }
+.discard-area { position: absolute; inset: calc(var(--avatar-sz) + 22px) calc(var(--avatar-sz) + 6px); z-index: 5; display: grid; grid-template-areas: ". top ." "left center right" ". bot ."; grid-template-columns: 1fr 2fr 1fr; grid-template-rows: 1fr 1.5fr 1fr; gap: 3px; border: 3px solid rgba(120,100,60,0.4); border-radius: 10px; background: linear-gradient(135deg, rgba(20,60,80,0.25) 0%, rgba(10,40,60,0.15) 100%); box-shadow: inset 0 0 40px rgba(0,0,0,0.2), 0 2px 8px rgba(0,0,0,0.3); padding: 4px; }
 .discard-zone { display: flex; flex-wrap: wrap; align-content: flex-start; gap: 1px; padding: 3px; border-radius: 4px; background: rgba(10,40,60,0.15); overflow: hidden; }
 .dz-top    { grid-area: top; }
 .dz-left   { grid-area: left; }
@@ -319,6 +319,7 @@ html, body { width: 100%; height: 100%; overflow: hidden; background: #1a4a1a; f
           <label>台</label><input class="setup-sm-input" id="set-tai" type="number" value="20" min="10" max="200">
           <label>出牌秒數</label><input class="setup-sm-input" id="set-timer" type="number" value="15" min="0" max="60" placeholder="0=無限">
           <label>碰牌秒數</label><input class="setup-sm-input" id="set-claim" type="number" value="5" min="1" max="30">
+          <label>局數</label><select class="setup-sm-input" id="set-rounds"><option value="4">四風(1圈)</option><option value="8">八風(2圈)</option><option value="16" selected>十六風(4圈)</option><option value="1">一將(1局)</option></select>
         </div>
       </div>
       <div class="lobby-btn-row">
@@ -1470,6 +1471,7 @@ function readSettings() {
     tai:   parseInt(el('set-tai').value)   || 20,
     timer: parseInt(el('set-timer').value) ?? 15,
     claim: parseInt(el('set-claim').value) || 5,
+    maxRounds: parseInt(el('set-rounds').value) || 16,
   };
 }
 
