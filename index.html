@@ -1908,9 +1908,23 @@ async function botDiscard(botPid, hand, myMelds, gs) {
     if (sorted.filter(x => x === t).length >= 2) val += 2; // pairs are good
     return val;
   };
-  // Discard the lowest-scored tile
-  let worst = sorted[0], worstScore = score(sorted[0]);
-  sorted.forEach(t => { const s = score(t); if (s < worstScore) { worstScore = s; worst = t; } });
+  // Prefer discards that maintain tenpai
+  let tenpaiDiscards = [];
+  sorted.forEach((t, i) => {
+    const remaining = sorted.filter((_, j) => j !== i);
+    if (getTenpaiTiles(remaining, myMelds).length > 0) tenpaiDiscards.push(t);
+  });
+
+  let worst;
+  if (tenpaiDiscards.length > 0) {
+    // Among tenpai-safe discards, pick the lowest-scored one
+    worst = tenpaiDiscards[0]; let worstScore = score(tenpaiDiscards[0]);
+    tenpaiDiscards.forEach(t => { const s = score(t); if (s < worstScore) { worstScore = s; worst = t; } });
+  } else {
+    // No tenpai possible, discard lowest-scored tile
+    worst = sorted[0]; let worstScore = score(sorted[0]);
+    sorted.forEach(t => { const s = score(t); if (s < worstScore) { worstScore = s; worst = t; } });
+  }
 
   const newHand = [...sorted];
   const idx = newHand.indexOf(worst);
