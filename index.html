@@ -1407,6 +1407,14 @@ function showWinScreen(winInfo, winnerPid) {
     nextRound  = curRound + 1;
   }
 
+  // Check if game should end (maxRounds reached)
+  const maxRounds = roomSettings.maxRounds || 16;
+  if (nextRound > maxRounds) {
+    el('btn-play-again').textContent = '遊戲結束 — 返回大廳';
+  } else {
+    el('btn-play-again').textContent = `再來一局 🀄 (第${nextRound}/${maxRounds}局)`;
+  }
+
   showScreen('screen-win');
 }
 
