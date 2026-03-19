@@ -619,7 +619,7 @@ function getKongOptions(hand, tile, melds) {
 // ============================================================
 // TAI CALCULATION
 // ============================================================
-function calcTai(hand, melds, flowers, isSelfDraw, isDealer, wallRemaining, isFirstDraw, seatIdx, dealerIdx, round, isKongDraw) {
+function calcTai(hand, melds, flowers, isSelfDraw, isDealer, wallRemaining, isFirstDraw, seatIdx, dealerIdx, round, isKongDraw, isFlowerDraw) {
   if (isFirstDraw && isSelfDraw) {
     const label = isDealer ? '天胡' : '地胡';
     return { tai: isDealer ? 16 : 8, breakdown: [label] };
@@ -630,6 +630,7 @@ function calcTai(hand, melds, flowers, isSelfDraw, isDealer, wallRemaining, isFi
 
   if (isSelfDraw)                                   { tai++; breakdown.push('自摸 +1台'); }
   if (isSelfDraw && isKongDraw)                     { tai++; breakdown.push('槓上開花 +1台'); }
+  if (isSelfDraw && isFlowerDraw)                   { tai++; breakdown.push('嶺上開花 +1台'); }
   if (!isSelfDraw && (melds || []).filter(m => m.type !== '暗槓').length === 0)
                                                     { tai++; breakdown.push('門清 +1台'); }
   if (wallRemaining === 0)
@@ -755,11 +756,13 @@ async function fireDraw() {
     return;
   }
   hand.push(tile);
+  const hadFlowerDraw = flowers.length > (gameState.flowers[myPlayerId] || []).length;
 
   await update(ref(db, `rooms/${roomCode}/game`), {
     [`hands/${myPlayerId}`]: hand,
     [`flowers/${myPlayerId}`]: flowers,
     wallIndex: idx,
+    flowerDrawPid: hadFlowerDraw ? myPlayerId : null,
   });
 }
 
@@ -777,6 +780,7 @@ async function fireDiscard() {
     currentTurn: nextPlayer(myPlayerId),
     pendingAction: null,
     kongDrawPid: null,
+    flowerDrawPid: null,
   });
   selectedTileIdx = null;
 }
@@ -932,7 +936,8 @@ async function fireDeclareWin() {
   const seatIdx  = PLAYER_IDS.indexOf(myPlayerId);
   const dealerIdx = PLAYER_IDS.indexOf(gameState.dealer);
   const isKongDraw = isSelfDraw && gameState.kongDrawPid === myPlayerId;
-  const { tai, breakdown } = calcTai(fullHand, myMelds, myFlows, isSelfDraw, isDealer, wallLeft, false, seatIdx, dealerIdx, gameState.round, isKongDraw);
+  const isFlowerDraw = isSelfDraw && gameState.flowerDrawPid === myPlayerId;
+  const { tai, breakdown } = calcTai(fullHand, myMelds, myFlows, isSelfDraw, isDealer, wallLeft, false, seatIdx, dealerIdx, gameState.round, isKongDraw, isFlowerDraw);
 
   const discarder = isKongRob ? pendKong.by : (isClaim ? gameState.lastDiscard?.by : null);
   await update(ref(db, `rooms/${roomCode}/game`), {
@@ -1712,10 +1717,12 @@ async function botDraw(botPid, gs) {
     return;
   }
   hand.push(tile);
+  const hadFlowerDraw = flowers.length > (gs.flowers[botPid] || []).length;
   await update(ref(db, `rooms/${roomCode}/game`), {
     [`hands/${botPid}`]: hand,
     [`flowers/${botPid}`]: flowers,
     wallIndex: idx,
+    flowerDrawPid: hadFlowerDraw ? botPid : null,
   });
 }
 
@@ -1755,6 +1762,7 @@ async function botDiscard(botPid, hand, myMelds, gs) {
     currentTurn: nextPlayer(botPid),
     pendingAction: null,
     kongDrawPid: null,
+    flowerDrawPid: null,
   });
 }
 
@@ -1848,7 +1856,8 @@ async function botDeclareWin(botPid, isSelfDraw, gs) {
   const seatIdx  = PLAYER_IDS.indexOf(botPid);
   const dIdx = PLAYER_IDS.indexOf(gs.dealer);
   const isKongDraw = isSelfDraw && gs.kongDrawPid === botPid;
-  const { tai, breakdown } = calcTai(fullHand, myMelds, myFlows, isSelfDraw, isDealer, wallLeft, false, seatIdx, dIdx, gs.round, isKongDraw);
+  const isFlowerDraw = isSelfDraw && gs.flowerDrawPid === botPid;
+  const { tai, breakdown } = calcTai(fullHand, myMelds, myFlows, isSelfDraw, isDealer, wallLeft, false, seatIdx, dIdx, gs.round, isKongDraw, isFlowerDraw);
   await update(ref(db, `rooms/${roomCode}/game`), {
     status: 'won',
     winner: botPid,

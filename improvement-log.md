@@ -22,3 +22,4 @@
 - feat: win screen score display now shows round change AND cumulative total per player
 - feat: bot smart pong — always pong honors, skip number pongs 50% of time to preserve 門清
 - feat: 槓上開花 (+1台) — tracks kong replacement draws via kongDrawPid, awards bonus on self-draw win
+- feat: 嶺上開花 (+1台) — tracks flower replacement draws via flowerDrawPid, awards bonus on self-draw win
