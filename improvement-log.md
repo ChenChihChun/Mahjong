@@ -32,3 +32,4 @@
 - ui: add bottom info bar (wind/dealer/name/money), darker table with radial gradient
 - ui: blue table theme, wood frame border, 3D tile shadows, glowing last discard, name plate backgrounds, rich bottom info bar
 - ui: wood shelf hand area, thick tile bottom edges, cloth texture, flower border, dark action bar
+- ui: face-down tile backs for other players, enhanced timer bar, discard tile appear animation
