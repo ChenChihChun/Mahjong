@@ -33,7 +33,7 @@
 - [x] 介面改善 畫面很醜 搭配playwright進行持續優化
 - [x] 介面仍然有待加強 而且方位與明星三缺一差距太多  要可以適應各種手機型號大小 (HTC、三星、Pixel、等等各大廠牌都要測試)
 - [x]  房間代碼畫面 與橫式作業不符，除了可以設定名稱外 還可以設定初始金額1000(預設)、底50(預設)、台20(預設) 等待秒數，0表示無設限，最多60秒，碰的等待秒數(預設5秒) 搭配playwright進行持續優化
-- [] 整體遊戲畫面 人物坐位 要比照明星三缺一 C:\Users\USER\Pictures\maxresdefault.jpg
+- [x] 整體遊戲畫面 人物坐位 要比照明星三缺一 C:\Users\USER\Pictures\maxresdefault.jpg
 - [] 持續優化 盡量比照 C:\Users\USER\Pictures\maxresdefault.jpg
 - [] 持續優化 盡量比照 C:\Users\USER\Pictures\maxresdefault.jpg
 - [] 持續優化 盡量比照 C:\Users\USER\Pictures\maxresdefault.jpg
