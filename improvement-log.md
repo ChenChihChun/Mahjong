@@ -43,3 +43,11 @@
 - fix: auto-draw dedup flag
 - fix: stuck game detector interval — forces bot progress after 20s
 - VERIFIED: full game cycle working with Playwright — bots draw/discard/claim correctly
+- fix: bot melds overflow — clear before re-render, limit width
+- feat: round setting (1局/1圈/2圈/4圈) in lobby
+- feat: maxRounds game end with progress display
+- feat: bot melds/flowers visible on game board
+- feat: drawn tile separated from hand with gap
+- fix: discard scoring 3x removed, standard Taiwan rules
+- fix: bot stateKey dedup for faster response
+- fix: bot delays halved for faster gameplay
