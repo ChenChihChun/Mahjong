@@ -1347,9 +1347,23 @@ function showWinScreen(winInfo, winnerPid) {
     el('win-title').textContent      = '流局！';
     el('win-player-lbl').textContent = winInfo.breakdown || '牌牆摸完';
     el('win-tai-lbl').textContent    = '';
-    el('win-breakdown').textContent  = '';
+    // Show current scores even on draw
+    el('win-breakdown').style.whiteSpace = 'pre-line';
+    let drawScores = '\n目前分數：\n';
+    PLAYER_IDS.forEach(pid => {
+      const name = (roomPlayers[pid] || {}).name || pid;
+      drawScores += `${name}：${scores[pid] || 0}分\n`;
+    });
+    el('win-breakdown').textContent = drawScores;
     const handEl = el('win-hand');
     while (handEl.firstChild) handEl.removeChild(handEl.firstChild);
+    // 連莊 on draw
+    const curDealer = gameState?.dealer || 'p1';
+    const curRound = gameState?.round || 1;
+    nextDealer = curDealer;
+    nextRound = curRound;
+    const maxRounds = roomSettings.maxRounds || 16;
+    el('btn-play-again').textContent = `再來一局 🀄 (第${nextRound}/${maxRounds}局)`;
     showScreen('screen-win');
     return;
   }
