@@ -1520,7 +1520,23 @@ async function dealAndPushGame() {
   listenToGame();
 }
 
+let autoDrawInterval = null;
 function listenToGame() {
+  // Reliable auto-draw fallback — checks every 2s if we need to draw
+  clearInterval(autoDrawInterval);
+  autoDrawInterval = setInterval(async () => {
+    if (!gameState || gameState.status === 'won') return;
+    if (gameState.currentTurn !== myPlayerId) return;
+    if (gameState.lastDiscard || gameState.pendingKong) return;
+    const h = ((gameState.hands || {})[myPlayerId] || []);
+    const m = ((gameState.melds || {})[myPlayerId] || []);
+    const expected = 17 - 3 * m.length;
+    if (h.length < expected) {
+      console.log('[AUTO-DRAW-INTERVAL] drawing, hand=' + h.length);
+      await fireDraw();
+    }
+  }, 2000);
+
   const gRef = ref(db, `rooms/${roomCode}/game`);
   addListener(gRef, snap => {
     if (!snap.exists()) return;
@@ -1589,13 +1605,17 @@ function listenToGame() {
         // Hand is short — auto-draw (use flag to prevent duplicate draws)
         if (!window._autoDrawPending) {
           window._autoDrawPending = true;
-          setTimeout(() => {
+          console.log('[AUTO-DRAW] scheduling draw, hand=' + myHandNow.length + ' expected=' + expectedLen);
+          setTimeout(async () => {
             window._autoDrawPending = false;
-            if (gameState?.currentTurn !== myPlayerId || gameState?.lastDiscard) return;
+            if (!gameState) { console.log('[AUTO-DRAW] no gameState'); return; }
+            if (gameState.currentTurn !== myPlayerId) { console.log('[AUTO-DRAW] not my turn:', gameState.currentTurn); return; }
+            if (gameState.lastDiscard) { console.log('[AUTO-DRAW] lastDiscard exists'); return; }
             const gs = gameState;
             const hLen = ((gs.hands || {})[myPlayerId] || []).length;
             const mLen = ((gs.melds || {})[myPlayerId] || []).length;
-            if (hLen < 17 - 3 * mLen) fireDraw();
+            console.log('[AUTO-DRAW] firing draw, hLen=' + hLen + ' need=' + (17-3*mLen));
+            if (hLen < 17 - 3 * mLen) await fireDraw();
           }, 500);
         }
       } else {
