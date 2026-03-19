@@ -840,7 +840,6 @@ async function fireDraw() {
   if (!gameState) { console.error('[DRAW] no gameState'); return; }
   const wall = gameState.wall || [];
   let idx    = gameState.wallIndex || 0;
-  console.log('[DRAW] wall=' + wall.length + ' idx=' + idx + ' player=' + myPlayerId);
   if (!wall.length || idx >= wall.length) {
     // Wall exhausted — declare draw (流局)
     await update(ref(db, `rooms/${roomCode}/game`), {
@@ -875,7 +874,6 @@ async function fireDraw() {
     wallIndex: idx,
     flowerDrawPid: hadFlowerDraw ? myPlayerId : null,
   });
-  console.log('[DRAW] success, new hand=' + hand.length);
   } catch(e) { console.error('[DRAW] FAILED:', e); }
 }
 
@@ -1640,13 +1638,11 @@ function listenToGame() {
       stuckCounter++;
       // If stuck for 5+ intervals (10s) and it's a bot's turn with lastDiscard, force clear
       if (stuckCounter >= 5 && ct !== myPlayerId && ld && isHost) {
-        console.log('[INTERVAL] game stuck, forcing clear for ' + ct);
         stuckCounter = 0;
         await update(ref(db, `rooms/${roomCode}/game`), { lastDiscard: null, pendingAction: null });
       }
       // If stuck for 5+ and it's a bot's turn without lastDiscard, force bot draw+discard
       if (stuckCounter >= 5 && ct !== myPlayerId && !ld && isHost) {
-        console.log('[INTERVAL] bot stuck at own turn, forcing draw for ' + ct);
         stuckCounter = 0;
         await botDraw(ct, gameState);
         // After draw, also check win and discard
@@ -1743,16 +1739,12 @@ function listenToGame() {
         // Hand is short — auto-draw (use flag to prevent duplicate draws)
         if (!window._autoDrawPending) {
           window._autoDrawPending = true;
-          console.log('[AUTO-DRAW] scheduling draw, hand=' + myHandNow.length + ' expected=' + expectedLen);
           setTimeout(async () => {
             window._autoDrawPending = false;
-            if (!gameState) { console.log('[AUTO-DRAW] no gameState'); return; }
-            if (gameState.currentTurn !== myPlayerId) { console.log('[AUTO-DRAW] not my turn:', gameState.currentTurn); return; }
-            if (gameState.lastDiscard) { console.log('[AUTO-DRAW] lastDiscard exists'); return; }
+            if (!gameState || gameState.currentTurn !== myPlayerId || gameState.lastDiscard) return;
             const gs = gameState;
             const hLen = ((gs.hands || {})[myPlayerId] || []).length;
             const mLen = ((gs.melds || {})[myPlayerId] || []).length;
-            console.log('[AUTO-DRAW] firing draw, hLen=' + hLen + ' need=' + (17-3*mLen));
             if (hLen < 17 - 3 * mLen) await fireDraw();
           }, 500);
         }
