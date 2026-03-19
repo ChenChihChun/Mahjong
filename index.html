@@ -79,7 +79,7 @@ html, body { width: 100%; height: 100%; overflow: hidden; background: #1a4a1a; f
 .avatar-corner.p-bot-left  { bottom: 2px; left: 2px; }
 .avatar-corner.p-bot-right { bottom: 2px; right: 2px; }
 .avatar-face { width: var(--avatar-sz); height: var(--avatar-sz); border-radius: 50%; border: 2px solid rgba(255,255,255,0.5); background: linear-gradient(135deg, #333 0%, #1a1a1a 100%); display: flex; align-items: center; justify-content: center; font-size: calc(var(--avatar-sz) * 0.5); box-shadow: 0 2px 8px rgba(0,0,0,0.5); }
-.avatar-name-lbl { font-size: min(2.2vmin, 11px); font-weight: 700; text-shadow: 0 1px 4px #000, 0 0 8px rgba(0,0,0,0.8); max-width: 72px; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.avatar-name-lbl { font-size: min(2.2vmin, 11px); font-weight: 700; text-shadow: 0 1px 4px #000, 0 0 8px rgba(0,0,0,0.8); max-width: 90px; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .avatar-score-lbl { font-size: min(2vmin, 10px); color: #f5c518; text-shadow: 0 1px 3px rgba(0,0,0,0.7); }
 
 /* Discard zones — top/bottom inset clears avatar+name+score, left/right clears avatar width */
@@ -104,7 +104,7 @@ html, body { width: 100%; height: 100%; overflow: hidden; background: #1a4a1a; f
 .tile.small  { width: var(--tw-sm); height: var(--th-sm); font-size: calc(var(--th-sm) * 0.38); }
 .tile.medium { width: var(--tw-md); height: var(--th-md); font-size: calc(var(--th-md) * 0.38); }
 .tile.large  { width: var(--tw-lg); height: var(--th-lg); font-size: calc(var(--th-lg) * 0.38); }
-.tile.selected { transform: translateY(-10px); box-shadow: 0 10px 20px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.95); border-color: #f5c518; outline: 2px solid #f5c518; }
+.tile.selected { transform: translateY(-12px); box-shadow: 0 12px 24px rgba(0,0,0,0.6), 0 0 12px rgba(245,197,24,0.4), inset 0 1px 0 rgba(255,255,255,0.95); border-color: #f5c518; outline: 2px solid #f5c518; }
 .tile.flower { background: linear-gradient(160deg, #fffbe8 0%, #f0e0a0 100%); border-color: #c8a050; }
 .tile.discard-last { outline: 2px solid #f5c518; outline-offset: 1px; }
 /* CSS tile inner layout */
@@ -1008,9 +1008,9 @@ function renderGameBoard() {
     const dealerMark = pid === gameState.dealer ? '莊 ' : '';
     el(`avatar-name-${ci}`).textContent  = dealerMark + (pData.name || pid);
     el(`avatar-score-${ci}`).textContent = `${scores[pid] || 0}分`;
-    const corner = el(`corner-${ci}`);
-    corner.style.outline      = pid === currentTurn ? '2px solid #f5c518' : '';
-    corner.style.borderRadius = '50px';
+    const face = el(`avatar-face-${ci}`);
+    face.style.borderColor = pid === currentTurn ? '#f5c518' : 'rgba(255,255,255,0.5)';
+    face.style.boxShadow   = pid === currentTurn ? '0 0 12px rgba(245,197,24,0.6), 0 2px 8px rgba(0,0,0,0.5)' : '0 2px 8px rgba(0,0,0,0.5)';
   });
 
   // Discards: dzRelMap[dzId] = relSeat

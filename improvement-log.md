@@ -24,3 +24,4 @@
 - feat: 槓上開花 (+1台) — tracks kong replacement draws via kongDrawPid, awards bonus on self-draw win
 - feat: 嶺上開花 (+1台) — tracks flower replacement draws via flowerDrawPid, awards bonus on self-draw win
 - ui: game board visual overhaul — radial gradient bg, subtle pattern, enhanced center display, bigger labels, improved action buttons, golden accents
+- ui: fix center info alignment, avatar glow for active player, wider name labels, enhanced tile selection glow
