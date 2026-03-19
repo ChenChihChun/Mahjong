@@ -1496,8 +1496,8 @@ function listenToGame() {
 
     // Auto-draw when it's my turn and no pending discard/kong
     if (isMyTurn && !lastDiscard && !gameState.pendingKong) {
-      const myHandNow = gameState.hands[myPlayerId] || [];
-      const expectedLen = 17 - 3 * (gameState.melds[myPlayerId]||[]).length;
+      const myHandNow = (gameState.hands || {})[myPlayerId] || [];
+      const expectedLen = 17 - 3 * ((gameState.melds || {})[myPlayerId]||[]).length;
       if (myHandNow.length < expectedLen) {
         // Hand is short — auto-draw
         setTimeout(() => {
