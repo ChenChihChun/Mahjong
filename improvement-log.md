@@ -29,3 +29,4 @@
 - ui: responsive layout for small phones — media queries for max-height 420px/340px, tested Samsung S21/iPhone SE/Pixel 5
 - feat: lobby redesign — landscape 2-column layout, game settings (金額/底/台/出牌秒/碰牌秒), settings stored in Firebase and used in gameplay
 - ui: reposition avatars to match 明星三缺一 — across=top-center, left/right=sides, me=bottom-right
+- ui: add bottom info bar (wind/dealer/name/money), darker table with radial gradient
