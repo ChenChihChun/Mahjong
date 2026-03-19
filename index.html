@@ -776,23 +776,30 @@ async function fireChow(otherTwo) {
 
 async function fireKong(kongOpt) {
   const tile = kongOpt.tile;
-  let hand   = [...(gameState.hands[myPlayerId] || [])];
-  let melds  = [...(gameState.melds[myPlayerId] || [])];
-  let removeCount = kongOpt.type === '明槓' ? 3 : kongOpt.type === '暗槓' ? 4 : 1;
 
-  hand = hand.filter(t => {
-    if (t === tile && removeCount > 0) { removeCount--; return false; }
-    return true;
-  });
-
-  if (kongOpt.type === '明槓' || kongOpt.type === '暗槓') {
-    melds.push({ type: kongOpt.type, tiles: [tile, tile, tile, tile] });
-  } else {
-    const idx = melds.findIndex(m => m.type === '碰' && m.tiles[0] === tile);
-    if (idx !== -1) melds[idx] = { type: '加槓', tiles: [tile, tile, tile, tile] };
+  // 加槓: expose tile for 搶槓胡 claim window before completing
+  if (kongOpt.type === '加槓') {
+    await update(ref(db, `rooms/${roomCode}/game`), {
+      pendingKong: { tile, by: myPlayerId },
+    });
+    showNotif('槓！');
+    // After 3s claim window, complete the kong if no one robbed it
+    setTimeout(async () => {
+      const fresh = (await get(ref(db, `rooms/${roomCode}/game`))).val();
+      if (fresh?.pendingKong?.tile === tile && fresh?.pendingKong?.by === myPlayerId && fresh?.status !== 'won') {
+        await completeKong(myPlayerId, tile, fresh);
+      }
+    }, 3000);
+    return;
   }
 
-  // Draw replacement tile
+  // 明槓 / 暗槓: complete immediately (no rob possible)
+  let hand   = [...(gameState.hands[myPlayerId] || [])];
+  let melds  = [...(gameState.melds[myPlayerId] || [])];
+  let removeCount = kongOpt.type === '明槓' ? 3 : 4;
+  hand = hand.filter(t => { if (t === tile && removeCount > 0) { removeCount--; return false; } return true; });
+  melds.push({ type: kongOpt.type, tiles: [tile, tile, tile, tile] });
+
   let wallIdx = gameState.wallIndex;
   const wall  = gameState.wall;
   const flowers = [...(gameState.flowers[myPlayerId] || [])];
@@ -801,15 +808,33 @@ async function fireKong(kongOpt) {
   if (drawn && !isFlower(drawn)) hand.push(drawn);
 
   await update(ref(db, `rooms/${roomCode}/game`), {
-    [`hands/${myPlayerId}`]: hand,
-    [`melds/${myPlayerId}`]: melds,
-    [`flowers/${myPlayerId}`]: flowers,
-    wallIndex: wallIdx,
-    currentTurn: myPlayerId,
-    lastDiscard: null,
-    pendingAction: null,
+    [`hands/${myPlayerId}`]: hand, [`melds/${myPlayerId}`]: melds,
+    [`flowers/${myPlayerId}`]: flowers, wallIndex: wallIdx,
+    currentTurn: myPlayerId, lastDiscard: null, pendingAction: null,
   });
   showNotif('槓！');
+}
+
+async function completeKong(pid, tile, gs) {
+  const hand = [...(gs.hands[pid] || [])];
+  const melds = [...(gs.melds[pid] || [])];
+  const rmIdx = hand.indexOf(tile);
+  if (rmIdx !== -1) hand.splice(rmIdx, 1);
+  const mIdx = melds.findIndex(m => m.type === '碰' && m.tiles[0] === tile);
+  if (mIdx !== -1) melds[mIdx] = { type: '加槓', tiles: [tile, tile, tile, tile] };
+
+  let wallIdx = gs.wallIndex;
+  const wall  = gs.wall;
+  const flowers = [...(gs.flowers[pid] || [])];
+  let drawn = wall[wallIdx++];
+  while (drawn && isFlower(drawn) && wallIdx < wall.length) { flowers.push(drawn); drawn = wall[wallIdx++]; }
+  if (drawn && !isFlower(drawn)) hand.push(drawn);
+
+  await update(ref(db, `rooms/${roomCode}/game`), {
+    [`hands/${pid}`]: hand, [`melds/${pid}`]: melds,
+    [`flowers/${pid}`]: flowers, wallIndex: wallIdx,
+    currentTurn: pid, lastDiscard: null, pendingAction: null, pendingKong: null,
+  });
 }
 
 async function fireSkip() {
@@ -831,8 +856,12 @@ async function fireDeclareWin() {
   const isMyTurn = gameState.currentTurn === myPlayerId;
   const lastTile = gameState.lastDiscard?.tile;
   const isClaim  = !!lastTile && gameState.lastDiscard?.by !== myPlayerId;
-  const isSelfDraw = isMyTurn && !isClaim;
-  const fullHand = isClaim ? [...hand, lastTile] : hand;
+  // 搶槓胡: rob a pending 加槓
+  const pendKong = gameState.pendingKong;
+  const isKongRob = !!pendKong && pendKong.by !== myPlayerId;
+  const winTile  = isKongRob ? pendKong.tile : (isClaim ? lastTile : null);
+  const isSelfDraw = isMyTurn && !isClaim && !isKongRob;
+  const fullHand = winTile ? [...hand, winTile] : hand;
 
   if (!canWin(fullHand, myMelds)) { showToast('牌型不符合胡牌條件'); return; }
 
@@ -842,15 +871,17 @@ async function fireDeclareWin() {
   const { tai, breakdown } = calcTai(fullHand, myMelds, myFlows, isSelfDraw, isDealer, wallLeft, false, seatIdx);
   // In Taiwan mahjong, 平胡 (0 tai) is still valid — no minimum requirement enforced
 
+  const discarder = isKongRob ? pendKong.by : (isClaim ? gameState.lastDiscard?.by : null);
   await update(ref(db, `rooms/${roomCode}/game`), {
     status: 'won',
     winner: myPlayerId,
+    pendingKong: null,
     winInfo: {
       tai,
       breakdown: breakdown.join('，'),
       isSelfDraw,
       hand: fullHand,
-      discarder: isClaim ? gameState.lastDiscard?.by : null,
+      discarder,
     },
   });
 }
@@ -982,11 +1013,14 @@ function updateActionButtons() {
   el('btn-chow').disabled     = chowOpts.length === 0;
   el('btn-kong').disabled     = !((canClaim && getKongOptions(myHand, lastTile, myMelds).some(k => k.type === '明槓'))
                                || (isMyTurn && !lastTile && getKongOptions(myHand, null, myMelds).some(k => k.type !== '明槓')));
+  const pendKong = gameState.pendingKong;
+  const kongRobWin = !!pendKong && pendKong.by !== myPlayerId && canWin([...myHand, pendKong.tile], myMelds);
   el('btn-win-claim').disabled = !((canClaim && canWin([...myHand, lastTile], myMelds))
-                               || (isMyTurn && !lastTile && canWin(myHand, myMelds)));
+                               || (isMyTurn && !lastTile && canWin(myHand, myMelds))
+                               || kongRobWin);
   // Can discard only if it's my turn AND no pending claim (lastDiscard cleared)
   el('btn-discard').disabled  = !(isMyTurn && !lastTile && selectedTileIdx !== null);
-  el('btn-skip').disabled     = !canClaim;
+  el('btn-skip').disabled     = !(canClaim || kongRobWin);
 }
 
 // ============================================================
@@ -1247,12 +1281,19 @@ function listenToGame() {
         if (hasAction) startActionTimer(8, () => fireSkip());
         else stopActionTimer();
       }
+    } else if (gameState.pendingKong && gameState.pendingKong.by !== myPlayerId) {
+      // 搶槓胡 claim window
+      if (canWin([...myHand, gameState.pendingKong.tile], myMelds)) {
+        startActionTimer(3, () => stopActionTimer()); // 3s to decide
+      } else {
+        stopActionTimer();
+      }
     } else {
       stopActionTimer();
     }
 
-    // Auto-draw when it's my turn and no pending discard
-    if (isMyTurn && !lastDiscard) {
+    // Auto-draw when it's my turn and no pending discard/kong
+    if (isMyTurn && !lastDiscard && !gameState.pendingKong) {
       const myHandNow = gameState.hands[myPlayerId] || [];
       // Only auto-draw if hand is short (haven't drawn yet this turn)
       const expectedLen = 17 - 3 * (gameState.melds[myPlayerId]||[]).length;
@@ -1442,6 +1483,28 @@ async function _runBotTurnInner(gs, botPid) {
   const lastBy   = lastDiscard?.by;
 
   const isNextPlayer = currentTurn === botPid;
+
+  // --- 搶槓胡: check if bot can rob a pending kong ---
+  if (gs.pendingKong && gs.pendingKong.by !== botPid) {
+    const kongTile = gs.pendingKong.tile;
+    if (canWin([...botHand, kongTile], botMelds)) {
+      await new Promise(r => setTimeout(r, 500 + Math.random() * 500));
+      const fresh = (await get(ref(db, `rooms/${roomCode}/game`))).val();
+      if (fresh?.pendingKong?.tile === kongTile && fresh?.status !== 'won') {
+        const fullHand = [...botHand, kongTile];
+        const myFlows = flowers[botPid] || [];
+        const wallLeft = (fresh.wall || []).length - (fresh.wallIndex || 0);
+        const isDealer = fresh.dealer === botPid;
+        const seatIdx  = PLAYER_IDS.indexOf(botPid);
+        const { tai, breakdown } = calcTai(fullHand, botMelds, myFlows, false, isDealer, wallLeft, false, seatIdx);
+        await update(ref(db, `rooms/${roomCode}/game`), {
+          status: 'won', winner: botPid, pendingKong: null,
+          winInfo: { tai, breakdown: breakdown.join('，'), isSelfDraw: false, hand: fullHand, discarder: gs.pendingKong.by },
+        });
+      }
+    }
+    return;
+  }
 
   // --- Someone discarded, bot can claim ---
   if (lastTile && lastBy !== botPid) {

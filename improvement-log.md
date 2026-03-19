@@ -5,3 +5,4 @@
 - fix: bot concurrency guard — prevent double draws/discards from overlapping async bot turns
 - fix: fireSkip only clears lastDiscard when called by currentTurn player, preventing premature claim window closure
 - fix: bot AI now values honor tile pairs/triplets instead of always discarding them (dragons/winds scored by count)
+- feat: 搶槓胡 — when a player does 加槓, others get a 3s window to rob the kong and win
