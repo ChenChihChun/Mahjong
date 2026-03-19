@@ -847,8 +847,8 @@ async function fireDraw() {
     return;
   }
 
-  const hand    = [...(gameState.hands[myPlayerId] || [])];
-  const flowers = [...(gameState.flowers[myPlayerId] || [])];
+  const hand    = [...((gameState.hands || {})[myPlayerId] || [])];
+  const flowers = [...((gameState.flowers || {})[myPlayerId] || [])];
   let tile = wall[idx++];
   while (isFlower(tile) && idx < wall.length) { flowers.push(tile); tile = wall[idx++]; }
   if (isFlower(tile)) {
@@ -874,14 +874,14 @@ async function fireDraw() {
 
 async function fireDiscard() {
   if (selectedTileIdx === null) { showToast('請先選擇要出的牌'); return; }
-  const hand = sortTiles(gameState.hands[myPlayerId] || []);
+  const hand = sortTiles((gameState.hands || {})[myPlayerId] || []);
   const tile  = hand[selectedTileIdx];
   if (!tile) return;
   const newHand = hand.filter((_, i) => i !== selectedTileIdx);
 
   await update(ref(db, `rooms/${roomCode}/game`), {
     [`hands/${myPlayerId}`]: newHand,
-    [`discards/${myPlayerId}`]: [...(gameState.discards[myPlayerId] || []), tile],
+    [`discards/${myPlayerId}`]: [...((gameState.discards || {})[myPlayerId] || []), tile],
     lastDiscard: { tile, by: myPlayerId },
     currentTurn: nextPlayer(myPlayerId),
     pendingAction: null,
@@ -895,11 +895,11 @@ async function firePong() {
   const tile = gameState?.lastDiscard?.tile;
   const lastBy = gameState?.lastDiscard?.by;
   if (!tile) return;
-  const hand = [...(gameState.hands[myPlayerId] || [])];
+  const hand = [...((gameState.hands || {})[myPlayerId] || [])];
   let removed = 0;
   const newHand = hand.filter(t => (t === tile && removed < 2) ? (removed++, false) : true);
-  const myMelds = [...(gameState.melds[myPlayerId] || []), { type:'碰', tiles:[tile,tile,tile] }];
-  const discarderPile = [...(gameState.discards[lastBy] || [])];
+  const myMelds = [...((gameState.melds || {})[myPlayerId] || []), { type:'碰', tiles:[tile,tile,tile] }];
+  const discarderPile = [...((gameState.discards || {})[lastBy] || [])];
   discarderPile.pop(); // remove claimed tile
   await update(ref(db, `rooms/${roomCode}/game`), {
     [`hands/${myPlayerId}`]: newHand,
@@ -916,7 +916,7 @@ async function fireChow(otherTwo) {
   const tile = gameState?.lastDiscard?.tile;
   const lastBy = gameState?.lastDiscard?.by;
   if (!tile) return;
-  const hand = [...(gameState.hands[myPlayerId] || [])];
+  const hand = [...((gameState.hands || {})[myPlayerId] || [])];
   let removals = [...otherTwo];
   const newHand = hand.filter(t => {
     const i = removals.indexOf(t);
@@ -924,8 +924,8 @@ async function fireChow(otherTwo) {
     return true;
   });
   const meldTiles = sortTiles([tile, ...otherTwo]);
-  const myMelds = [...(gameState.melds[myPlayerId] || []), { type:'吃', tiles: meldTiles }];
-  const discarderPile = [...(gameState.discards[lastBy] || [])];
+  const myMelds = [...((gameState.melds || {})[myPlayerId] || []), { type:'吃', tiles: meldTiles }];
+  const discarderPile = [...((gameState.discards || {})[lastBy] || [])];
   discarderPile.pop();
   await update(ref(db, `rooms/${roomCode}/game`), {
     [`hands/${myPlayerId}`]: newHand,
@@ -958,8 +958,8 @@ async function fireKong(kongOpt) {
   }
 
   // 明槓 / 暗槓: complete immediately (no rob possible)
-  let hand   = [...(gameState.hands[myPlayerId] || [])];
-  let melds  = [...(gameState.melds[myPlayerId] || [])];
+  let hand   = [...((gameState.hands || {})[myPlayerId] || [])];
+  let melds  = [...((gameState.melds || {})[myPlayerId] || [])];
   let removeCount = kongOpt.type === '明槓' ? 3 : 4;
   hand = hand.filter(t => { if (t === tile && removeCount > 0) { removeCount--; return false; } return true; });
   melds.push({ type: kongOpt.type, tiles: [tile, tile, tile, tile] });
@@ -1016,9 +1016,9 @@ async function fireSkip() {
 
 async function fireDeclareWin() {
   if (!gameState) return;
-  const hand    = gameState.hands[myPlayerId] || [];
-  const myMelds = gameState.melds[myPlayerId] || [];
-  const myFlows = gameState.flowers[myPlayerId] || [];
+  const hand    = (gameState.hands || {})[myPlayerId] || [];
+  const myMelds = (gameState.melds || {})[myPlayerId] || [];
+  const myFlows = (gameState.flowers || {})[myPlayerId] || [];
   const isMyTurn = gameState.currentTurn === myPlayerId;
   const lastTile = gameState.lastDiscard?.tile;
   const isClaim  = !!lastTile && gameState.lastDiscard?.by !== myPlayerId;
@@ -1678,8 +1678,8 @@ el('chow-cancel').addEventListener('click', () => { el('chow-selector').style.di
 
 el('btn-kong').addEventListener('click', () => {
   if (!gameState) return;
-  const hand   = gameState.hands[myPlayerId] || [];
-  const melds  = gameState.melds[myPlayerId] || [];
+  const hand   = (gameState.hands || {})[myPlayerId] || [];
+  const melds  = (gameState.melds || {})[myPlayerId] || [];
   const lastTile = gameState.lastDiscard?.tile;
   const isMyTurn = gameState.currentTurn === myPlayerId;
   const opts = getKongOptions(hand, isMyTurn ? null : lastTile, melds);
