@@ -144,23 +144,24 @@ html, body { width: 100%; height: 100%; overflow: hidden; background: #1a4a1a; f
 .meld-type-lbl { font-size: 0.5rem; color: #aaa; display: block; text-align: center; }
 .hand-flowers { display: flex; gap: 2px; margin-top: 3px; background: rgba(200,170,80,0.1); border: 1px solid rgba(200,170,80,0.2); border-radius: 4px; padding: 2px; }
 
-/* Action buttons */
-.action-bar { display: flex; gap: 6px; padding: 6px 8px 6px; background: linear-gradient(to bottom, #2a1a10, #1a0e08); flex-wrap: nowrap; border-top: 1px solid rgba(138,112,80,0.3); }
-.action-btn { flex: 1; padding: 10px 2px; font-size: min(3.8vmin, 16px); font-weight: 800; border: none; border-radius: 10px; cursor: pointer; transition: transform 0.1s, opacity 0.1s; white-space: nowrap; letter-spacing: 0.15em; box-shadow: 0 2px 8px rgba(0,0,0,0.3); }
-.action-btn:active { transform: scale(0.95); }
-.action-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+/* Action buttons — circular overlay style (明星三缺一) */
+.action-bar { display: flex; gap: min(2vmin, 10px); padding: 4px 8px; background: linear-gradient(to bottom, rgba(30,15,8,0.85), rgba(20,10,5,0.95)); flex-wrap: nowrap; justify-content: center; border-top: 1px solid rgba(138,112,80,0.3); }
+.action-btn { width: min(12vmin, 56px); height: min(12vmin, 56px); padding: 0; font-size: min(3.5vmin, 15px); font-weight: 900; border: 2px solid rgba(255,255,255,0.3); border-radius: 50%; cursor: pointer; transition: transform 0.15s, opacity 0.15s, box-shadow 0.15s; white-space: nowrap; letter-spacing: 0; box-shadow: 0 3px 10px rgba(0,0,0,0.4); flex: none; display: flex; align-items: center; justify-content: center; }
+.action-btn:active { transform: scale(0.9); }
+.action-btn:disabled { opacity: 0.25; cursor: not-allowed; border-color: rgba(255,255,255,0.1); }
+.action-btn:not(:disabled):hover { transform: scale(1.08); box-shadow: 0 4px 16px rgba(0,0,0,0.5); }
 
 /* Portrait mode — show rotate hint */
 #rotate-hint { display:none; position:fixed; inset:0; background:#0f2f0f; z-index:9999; flex-direction:column; align-items:center; justify-content:center; gap:16px; font-size:1.3rem; text-align:center; pointer-events:none; }
 #rotate-hint .rotate-icon { font-size:3rem; animation: spin90 1.5s ease-in-out infinite alternate; }
 @keyframes spin90 { from { transform: rotate(0deg); } to { transform: rotate(90deg); } }
 @media (orientation: portrait) { #rotate-hint { display:flex; } }
-.btn-pong    { background: linear-gradient(180deg, #5a9ae0, #2a6ab8); color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.3); }
-.btn-chow    { background: linear-gradient(180deg, #5ec85e, #2a9a3a); color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.3); }
-.btn-kong    { background: linear-gradient(180deg, #e09050, #b86030); color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.3); }
-.btn-win     { background: linear-gradient(180deg, #ffd030, #e8a000); color: #1a1a1a; text-shadow: 0 1px 0 rgba(255,255,255,0.3); }
-.btn-discard { background: linear-gradient(180deg, #9a5a9a, #6a2a6a); color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.3); }
-.btn-skip    { background: rgba(255,255,255,0.15); color: #ccc; border: 1px solid rgba(255,255,255,0.2); }
+.btn-pong    { background: radial-gradient(circle at 35% 35%, #6aaaf0, #2a6ab8); color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,0.5); }
+.btn-chow    { background: radial-gradient(circle at 35% 35%, #6ed86e, #2a9a3a); color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,0.5); }
+.btn-kong    { background: radial-gradient(circle at 35% 35%, #f0a060, #b86030); color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,0.5); }
+.btn-win     { background: radial-gradient(circle at 35% 35%, #ffe050, #e8a000); color: #1a1a1a; text-shadow: 0 1px 0 rgba(255,255,255,0.4); border-color: rgba(245,197,24,0.5); }
+.btn-discard { background: radial-gradient(circle at 35% 35%, #aa6aaa, #6a2a6a); color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,0.5); }
+.btn-skip    { background: radial-gradient(circle at 35% 35%, rgba(150,150,150,0.4), rgba(80,80,80,0.3)); color: #ccc; }
 
 /* Overlays */
 .turn-indicator { position: absolute; top: 8%; left: 50%; transform: translateX(-50%); background: linear-gradient(135deg, rgba(245,197,24,0.9), rgba(232,160,0,0.9)); color: #1a1a1a; font-weight: 800; font-size: 0.8rem; padding: 5px 18px; border-radius: 20px; pointer-events: none; z-index: 20; transition: opacity 0.3s; box-shadow: 0 0 20px rgba(245,197,24,0.5), 0 2px 6px rgba(0,0,0,0.3); letter-spacing: 0.15em; animation: turn-pulse 2s ease-in-out infinite; }
@@ -225,8 +226,8 @@ html, body { width: 100%; height: 100%; overflow: hidden; background: #1a4a1a; f
   .avatar-score-lbl { font-size: min(1.4vmin, 6px); }
   .hand-area { padding: 2px 4px 1px; }
   .hand-tiles { min-height: calc(var(--th-lg) + 2px); gap: 1px; }
-  .action-btn { padding: 5px 1px; font-size: min(3vmin, 12px); letter-spacing: 0.05em; border-radius: 6px; }
-  .action-bar { gap: 3px; padding: 3px 4px 4px; }
+  .action-btn { width: min(10vmin, 40px); height: min(10vmin, 40px); font-size: min(2.8vmin, 11px); }
+  .action-bar { gap: min(1.5vmin, 6px); padding: 2px 4px 3px; }
   .turn-indicator { top: 2px; font-size: 0.7rem; padding: 3px 12px; }
   .discard-area { inset: calc(var(--avatar-sz) + 16px) calc(var(--avatar-sz) + 4px); }
   .center-wind-lbl { font-size: min(4vmin, 1.4rem); }
