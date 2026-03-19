@@ -1092,7 +1092,8 @@ function renderGameBoard() {
   const dealerIdx = PLAYER_IDS.indexOf(gameState.dealer || 'p1');
   const myRelSeat = (PLAYER_IDS.indexOf(myPlayerId) - dealerIdx + 4) % 4;
   txt('center-wind',  WINDS[myRelSeat] || '東');
-  txt('center-round', `第${round || 1}局`);
+  const roundWindIdx = Math.min(Math.floor(((round || 1) - 1) / 4), 3);
+  txt('center-round', `${WINDS[roundWindIdx]}風 第${round || 1}局`);
   txt('center-wall',  `牌牆: ${wallLeft}`);
 
   // Bottom info bar
@@ -1112,10 +1113,10 @@ function renderGameBoard() {
     const pid   = relToAbs(rel);
     const pData = roomPlayers[pid] || {};
     el(`avatar-face-${ci}`).textContent  = EMOJI_AVATARS[pData.avatarIdx || 0];
-    const dealerMark = pid === gameState.dealer ? '莊 ' : '';
-    el(`avatar-name-${ci}`).textContent  = dealerMark + (pData.name || pid);
+    el(`avatar-name-${ci}`).textContent  = pData.name || pid;
     const tileCount = (hands[pid] || []).length;
-    el(`avatar-score-${ci}`).textContent = `${scores[pid] || 0}分 · ${tileCount}牌`;
+    const relSeatOfPlayer = (PLAYER_IDS.indexOf(pid) - dealerIdx + 4) % 4;
+    el(`avatar-score-${ci}`).textContent = `${WINDS[relSeatOfPlayer]}${pid === gameState.dealer ? '莊' : ''} · ${scores[pid] || 0}分`;
     // Render face-down tile backs for other players (not for "me" corner=3)
     const backsEl = el(`tile-backs-${ci}`);
     if (backsEl) {
