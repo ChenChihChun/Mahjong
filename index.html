@@ -1168,15 +1168,18 @@ function renderGameBoard() {
     face.style.boxShadow   = pid === currentTurn ? '0 0 12px rgba(245,197,24,0.6), 0 2px 8px rgba(0,0,0,0.5)' : '0 2px 8px rgba(0,0,0,0.5)';
 
     // Show melds and flowers for other players (not for "me" = ci 3)
+    const existingMeldRow = backsEl?.parentElement?.querySelector('.player-melds');
+    if (existingMeldRow) existingMeldRow.remove();
     if (ci !== 3 && backsEl) {
       const pMeldsArr = melds[pid] || [];
       const pFlowersArr = (flowers[pid] || []);
       if (pMeldsArr.length > 0 || pFlowersArr.length > 0) {
         const meldRow = document.createElement('div');
-        meldRow.style.cssText = 'display:flex;gap:1px;flex-wrap:wrap;margin-top:2px;';
+        meldRow.className = 'player-melds';
+        meldRow.style.cssText = 'display:flex;gap:1px;flex-wrap:wrap;margin-top:2px;max-width:120px;';
         pMeldsArr.forEach(m => {
           m.tiles.forEach(t => meldRow.appendChild(makeTileEl(t, 'small')));
-          const sep = document.createElement('div'); sep.style.width = '3px'; meldRow.appendChild(sep);
+          const sep = document.createElement('div'); sep.style.width = '2px'; meldRow.appendChild(sep);
         });
         pFlowersArr.forEach(t => meldRow.appendChild(makeTileEl(t, 'small')));
         backsEl.parentElement.appendChild(meldRow);
