@@ -834,9 +834,11 @@ function nextPlayer(pid) {
 // GAME ACTIONS
 // ============================================================
 async function fireDraw() {
-  if (!gameState) return;
+  try {
+  if (!gameState) { console.error('[DRAW] no gameState'); return; }
   const wall = gameState.wall || [];
   let idx    = gameState.wallIndex || 0;
+  console.log('[DRAW] wall=' + wall.length + ' idx=' + idx + ' player=' + myPlayerId);
   if (!wall.length || idx >= wall.length) {
     // Wall exhausted — declare draw (流局)
     await update(ref(db, `rooms/${roomCode}/game`), {
@@ -870,6 +872,8 @@ async function fireDraw() {
     wallIndex: idx,
     flowerDrawPid: hadFlowerDraw ? myPlayerId : null,
   });
+  console.log('[DRAW] success, new hand=' + hand.length);
+  } catch(e) { console.error('[DRAW] FAILED:', e); }
 }
 
 async function fireDiscard() {
@@ -1526,14 +1530,17 @@ function listenToGame() {
   clearInterval(autoDrawInterval);
   autoDrawInterval = setInterval(async () => {
     if (!gameState || gameState.status === 'won') return;
-    if (gameState.currentTurn !== myPlayerId) return;
-    if (gameState.lastDiscard || gameState.pendingKong) return;
+    const ct = gameState.currentTurn;
+    const ld = gameState.lastDiscard;
+    const pk = gameState.pendingKong;
+    if (ct !== myPlayerId) return;
+    if (ld || pk) { console.log('[INTERVAL] waiting: ld=' + !!ld + ' pk=' + !!pk); return; }
     const h = ((gameState.hands || {})[myPlayerId] || []);
     const m = ((gameState.melds || {})[myPlayerId] || []);
     const expected = 17 - 3 * m.length;
     if (h.length < expected) {
-      console.log('[AUTO-DRAW-INTERVAL] drawing, hand=' + h.length);
-      await fireDraw();
+      console.log('[INTERVAL] drawing, hand=' + h.length + ' expected=' + expected);
+      try { await fireDraw(); } catch(e) { console.error('[INTERVAL] draw failed:', e); }
     }
   }, 2000);
 
