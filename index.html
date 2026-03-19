@@ -149,11 +149,11 @@ html, body { width: 100%; height: 100%; overflow: hidden; background: #1a4a1a; f
 #rotate-hint .rotate-icon { font-size:3rem; animation: spin90 1.5s ease-in-out infinite alternate; }
 @keyframes spin90 { from { transform: rotate(0deg); } to { transform: rotate(90deg); } }
 @media (orientation: portrait) { #rotate-hint { display:flex; } }
-.btn-pong    { background: linear-gradient(135deg, #4a90d9, #2a70b9); color: #fff; }
-.btn-chow    { background: linear-gradient(135deg, #5ab85a, #3a983a); color: #fff; }
-.btn-kong    { background: linear-gradient(135deg, #d9844a, #b96030); color: #fff; }
-.btn-win     { background: linear-gradient(135deg, #f5c518, #e8a000); color: #1a1a1a; }
-.btn-discard { background: linear-gradient(135deg, #8a4a8a, #6a2a6a); color: #fff; }
+.btn-pong    { background: linear-gradient(180deg, #5a9ae0, #2a6ab8); color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.3); }
+.btn-chow    { background: linear-gradient(180deg, #5ec85e, #2a9a3a); color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.3); }
+.btn-kong    { background: linear-gradient(180deg, #e09050, #b86030); color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.3); }
+.btn-win     { background: linear-gradient(180deg, #ffd030, #e8a000); color: #1a1a1a; text-shadow: 0 1px 0 rgba(255,255,255,0.3); }
+.btn-discard { background: linear-gradient(180deg, #9a5a9a, #6a2a6a); color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.3); }
 .btn-skip    { background: rgba(255,255,255,0.15); color: #ccc; border: 1px solid rgba(255,255,255,0.2); }
 
 /* Overlays */
@@ -1092,7 +1092,9 @@ function renderGameBoard() {
     el(`avatar-face-${ci}`).textContent  = EMOJI_AVATARS[pData.avatarIdx || 0];
     const dealerMark = pid === gameState.dealer ? '莊 ' : '';
     el(`avatar-name-${ci}`).textContent  = dealerMark + (pData.name || pid);
-    el(`avatar-score-${ci}`).textContent = `${scores[pid] || 0}分`;
+    const tileCount = (hands[pid] || []).length;
+    const meldCount = (melds[pid] || []).length;
+    el(`avatar-score-${ci}`).textContent = `${scores[pid] || 0}分 · ${tileCount}牌`;
     const face = el(`avatar-face-${ci}`);
     face.style.borderColor = pid === currentTurn ? '#f5c518' : 'rgba(255,255,255,0.5)';
     face.style.boxShadow   = pid === currentTurn ? '0 0 12px rgba(245,197,24,0.6), 0 2px 8px rgba(0,0,0,0.5)' : '0 2px 8px rgba(0,0,0,0.5)';
