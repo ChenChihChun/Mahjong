@@ -1069,7 +1069,9 @@ function renderMyHand() {
 
 function updateActionButtons() {
   if (!gameState) return;
-  const { currentTurn, lastDiscard, hands, melds } = gameState;
+  const { currentTurn, lastDiscard } = gameState;
+  const hands = gameState.hands || {};
+  const melds = gameState.melds || {};
   const isMyTurn = currentTurn === myPlayerId;
   const myHand   = hands[myPlayerId] || [];
   const myMelds  = melds[myPlayerId] || [];
