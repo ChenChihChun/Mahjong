@@ -1919,7 +1919,7 @@ async function _runBotTurnInner(gs, botPid) {
         const { tai, breakdown } = calcTai(fullHand, botMelds, myFlows, false, isDealer, wallLeft, false, seatIdx, dIdx, fresh.round);
         await update(ref(db, `rooms/${roomCode}/game`), {
           status: 'won', winner: botPid, pendingKong: null,
-          winInfo: { tai, breakdown: breakdown.join('，'), isSelfDraw: false, hand: fullHand, discarder: gs.pendingKong.by },
+          winInfo: { tai, breakdown: breakdown.join('，'), isSelfDraw: false, hand: fullHand, melds: botMelds, flowers: myFlows, discarder: gs.pendingKong.by },
         });
       }
     }
