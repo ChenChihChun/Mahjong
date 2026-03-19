@@ -1541,30 +1541,33 @@ function listenToGame() {
     // canClaim: anyone except the discarder can claim
     const canClaim  = !!lastDiscard && lastDiscard.by !== myPlayerId;
 
+    // Track which discard we're handling to avoid restarting timers for the same discard
+    const discardKey = lastDiscard ? `${lastDiscard.tile}:${lastDiscard.by}` : null;
+
     if (canClaim) {
       const lastTile = lastDiscard.tile;
       const capDiscard = lastDiscard;
       const stillValid = () => gameState?.lastDiscard?.tile === capDiscard.tile
                             && gameState?.lastDiscard?.by  === capDiscard.by;
-      if (isMyTurn) {
-        // I am the next player — I can chow. Show 8s if I have an action.
-        // Either way I'm responsible for clearing lastDiscard (fallback after 9s).
-        const hasAction = canPong(myHand, lastTile)
-                       || canChow(myHand, lastTile, lastDiscard.by).length > 0
-                       || canWin([...myHand, lastTile], myMelds);
-        const claimSecs = roomSettings.claim || 5;
-        if (hasAction) {
-          startActionTimer(claimSecs, () => fireSkip());
+      // Only start timer if this is a NEW discard (avoid resetting timer on every listener fire)
+      if (window._lastClaimKey !== discardKey) {
+        window._lastClaimKey = discardKey;
+        if (isMyTurn) {
+          const hasAction = canPong(myHand, lastTile)
+                         || canChow(myHand, lastTile, lastDiscard.by).length > 0
+                         || canWin([...myHand, lastTile], myMelds);
+          const claimSecs = roomSettings.claim || 5;
+          if (hasAction) {
+            startActionTimer(claimSecs, () => fireSkip());
+          } else {
+            stopActionTimer();
+            setTimeout(() => { if (stillValid()) fireSkip(); }, 1500);
+          }
         } else {
-          stopActionTimer();
-          // No action available — clear quickly (wait briefly for other players' claims)
-          setTimeout(() => { if (stillValid()) fireSkip(); }, 1500);
+          const hasAction = canPong(myHand, lastTile) || canWin([...myHand, lastTile], myMelds);
+          if (hasAction) startActionTimer(roomSettings.claim || 5, () => fireSkip());
+          else stopActionTimer();
         }
-      } else {
-        // C or D: can pong or win only
-        const hasAction = canPong(myHand, lastTile) || canWin([...myHand, lastTile], myMelds);
-        if (hasAction) startActionTimer(roomSettings.claim || 5, () => fireSkip());
-        else stopActionTimer();
       }
     } else if (gameState.pendingKong && gameState.pendingKong.by !== myPlayerId) {
       // 搶槓胡 claim window
@@ -1575,6 +1578,7 @@ function listenToGame() {
       }
     } else {
       stopActionTimer();
+      window._lastClaimKey = null;
     }
 
     // Auto-draw when it's my turn and no pending discard/kong
