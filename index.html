@@ -1114,7 +1114,12 @@ function renderGameBoard() {
     const pid   = relToAbs(rel);
     const pData = roomPlayers[pid] || {};
     el(`avatar-face-${ci}`).textContent  = EMOJI_AVATARS[pData.avatarIdx || 0];
-    el(`avatar-name-${ci}`).textContent  = pData.name || pid;
+    // Check tenpai status for this player
+    const pHand = hands[pid] || [];
+    const pMelds = (melds[pid] || []);
+    const expectedDiscard = 17 - 3 * pMelds.length;
+    const isTenpai = pHand.length === expectedDiscard - 1 && getTenpaiTiles(pHand, pMelds).length > 0;
+    el(`avatar-name-${ci}`).textContent  = (isTenpai ? '🀄聽 ' : '') + (pData.name || pid);
     const tileCount = (hands[pid] || []).length;
     const relSeatOfPlayer = (PLAYER_IDS.indexOf(pid) - dealerIdx + 4) % 4;
     el(`avatar-score-${ci}`).textContent = `${WINDS[relSeatOfPlayer]}${pid === gameState.dealer ? '莊' : ''} · ${scores[pid] || 0}分`;

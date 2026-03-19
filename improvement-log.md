@@ -34,3 +34,4 @@
 - ui: wood shelf hand area, thick tile bottom edges, cloth texture, flower border, dark action bar
 - ui: face-down tile backs for other players, enhanced timer bar, discard tile appear animation
 - feat: tenpai detection (getTenpaiTiles) + green outline on tiles that maintain tenpai when discarded
+- ui: circular action buttons (明星三缺一 style), 聽牌玩家顯示「聽」標記, wind/dealer per player
