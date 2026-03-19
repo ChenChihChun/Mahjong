@@ -1618,10 +1618,20 @@ async function _runBotTurnInner(gs, botPid) {
       await botDeclareWin(botPid, false, fresh);
       return;
     }
-    // 2. Pong
+    // 2. Pong (smart: preserve 門清 when beneficial)
     if (canPong(botHand, lastTile)) {
-      await botPong(botPid, lastTile, botHand, botMelds);
-      return;
+      const hasOpenMelds = botMelds.some(m => m.type !== '暗槓');
+      const isHonor = lastTile[1] === 'z';
+      // Always pong: honor tiles (tai value), or already have open melds (門清 lost anyway)
+      if (isHonor || hasOpenMelds) {
+        await botPong(botPid, lastTile, botHand, botMelds);
+        return;
+      }
+      // For number tiles with no open melds: skip pong 50% of the time to preserve 門清
+      if (Math.random() > 0.5) {
+        await botPong(botPid, lastTile, botHand, botMelds);
+        return;
+      }
     }
     // 3. Chow (only if this bot is the next player)
     if (isNextPlayer) {

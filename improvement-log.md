@@ -20,3 +20,4 @@
 - feat: show dealer marker (莊) on avatar name and display player's seat wind in center
 - fix: all-flowers-remaining in wall now correctly declares 流局 instead of freezing the game
 - feat: win screen score display now shows round change AND cumulative total per player
+- feat: bot smart pong — always pong honors, skip number pongs 50% of time to preserve 門清
