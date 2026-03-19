@@ -1075,6 +1075,8 @@ async function fireDeclareWin() {
       breakdown: breakdown.join('，'),
       isSelfDraw,
       hand: fullHand,
+      melds: myMelds,
+      flowers: myFlows,
       discarder,
     },
   });
@@ -1331,7 +1333,22 @@ function showWinScreen(winInfo, winnerPid) {
 
   const handEl = el('win-hand');
   while (handEl.firstChild) handEl.removeChild(handEl.firstChild);
-  (winInfo.hand || []).forEach(t => handEl.appendChild(makeTileEl(t, 'medium')));
+  // Show hand tiles
+  sortTiles(winInfo.hand || []).forEach(t => handEl.appendChild(makeTileEl(t, 'medium')));
+  // Show melds with separators
+  (winInfo.melds || []).forEach(meld => {
+    const sep = document.createElement('div');
+    sep.style.cssText = 'width:6px;';
+    handEl.appendChild(sep);
+    meld.tiles.forEach(t => handEl.appendChild(makeTileEl(t, 'medium')));
+  });
+  // Show flowers
+  if ((winInfo.flowers || []).length > 0) {
+    const sep2 = document.createElement('div');
+    sep2.style.cssText = 'width:6px;';
+    handEl.appendChild(sep2);
+    (winInfo.flowers || []).forEach(t => handEl.appendChild(makeTileEl(t, 'medium')));
+  }
 
   // Score update
   const prevScores = { ...scores };
@@ -2190,7 +2207,7 @@ async function botDeclareWin(botPid, isSelfDraw, gs) {
     winner: botPid,
     winInfo: {
       tai, breakdown: breakdown.join('，'), isSelfDraw,
-      hand: fullHand,
+      hand: fullHand, melds: myMelds, flowers: myFlows,
       discarder: isSelfDraw ? null : gs.lastDiscard?.by,
     },
   });
