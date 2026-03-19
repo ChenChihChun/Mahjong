@@ -788,6 +788,12 @@ function calcTai(hand, melds, flowers, isSelfDraw, isDealer, wallRemaining, isFi
     }
   }
 
+  // 全求人: all melds from others (4+ open melds, only pair in hand, won by discard)
+  const openMelds = (melds || []).filter(m => m.type !== '暗槓');
+  if (!isSelfDraw && openMelds.length >= 4 && hand.length === 2) {
+    tai += 2; breakdown.push('全求人 +2台');
+  }
+
   // Flower scoring (花牌)
   // 正花: f1-f4 (梅蘭菊竹) & f5-f8 (春夏秋冬) map to seats 0-3
   if (typeof seatIdx === 'number' && flowers && flowers.length > 0) {
@@ -1273,7 +1279,7 @@ function showWinScreen(winInfo, winnerPid) {
     const loserIsDealer  = gameState?.dealer === pid;
     const dealerInvolved = winnerIsDealer || loserIsDealer;
     let pay = 0;
-    if (winInfo.isSelfDraw) pay = dealerInvolved ? basePayment * 2 : basePayment;
+    if (winInfo.isSelfDraw) pay = (dealerInvolved ? basePayment * 2 : basePayment) + baseBet; // 自摸加底
     else if (isDiscarder)   pay = basePayment * 3 * (dealerInvolved ? 2 : 1);
     scores[winnerPid] = (scores[winnerPid] || 0) + pay;
     scores[pid]       = (scores[pid] || 0) - pay;

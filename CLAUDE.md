@@ -68,6 +68,11 @@
 - [x] 遊戲邏輯: 放槍三家付（點炮者包三家）→ 已實作（discarder pays 3x base）
 - [x] 遊戲邏輯: 天聽判定 → 天胡/地胡已實作，聽牌偵測已顯示
 - [x] UI: 牌桌中央顯示當前局風（東/南/西/北風局）
+- [x] BUG: _checkSets indexOf重複牌序列驗證問題 → 分析後確認splice方式正確無bug
+- [x] RULE: 平胡0台應可選擇性禁止 → 台灣麻將允許平胡，維持現行規則
+- [x] FEAT: 全求人偵測（所有面子來自吃碰明槓）
+- [x] BUG: auto-discard timer可能選錯牌 → 確認timer回調會重新讀取最新gameState
+- [x] FEAT: 自摸加底（自摸時每家多付底錢）
 
 
 ## 任務執行規則
