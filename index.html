@@ -1925,7 +1925,7 @@ async function _runBotTurnInner(gs, botPid) {
   if (gs.pendingKong && gs.pendingKong.by !== botPid) {
     const kongTile = gs.pendingKong.tile;
     if (canWin([...botHand, kongTile], botMelds)) {
-      await new Promise(r => setTimeout(r, 500 + Math.random() * 500));
+      await new Promise(r => setTimeout(r, 200 + Math.random() * 200));
       const fresh = (await get(ref(db, `rooms/${roomCode}/game`))).val();
       if (fresh?.pendingKong?.tile === kongTile && fresh?.status !== 'won') {
         const fullHand = [...botHand, kongTile];
@@ -1950,7 +1950,7 @@ async function _runBotTurnInner(gs, botPid) {
     const discarderIdx = PLAYER_IDS.indexOf(lastBy);
     const botIdx = PLAYER_IDS.indexOf(botPid);
     const dist = (botIdx - discarderIdx + 4) % 4; // 1=next, 2=across, 3=prev
-    await new Promise(r => setTimeout(r, 400 + dist * 300 + Math.random() * 300));
+    await new Promise(r => setTimeout(r, 200 + dist * 150 + Math.random() * 150));
     const fresh = (await get(ref(db, `rooms/${roomCode}/game`))).val();
     if (!fresh || fresh.lastDiscard?.tile !== lastTile) return;
 
@@ -2009,7 +2009,7 @@ async function _runBotTurnInner(gs, botPid) {
 
   // --- Bot's own turn (no pending discard from others) ---
   if (!isNextPlayer || lastTile) return;
-  await new Promise(r => setTimeout(r, 600 + Math.random() * 600));
+  await new Promise(r => setTimeout(r, 300 + Math.random() * 300));
 
   const fresh = (await get(ref(db, `rooms/${roomCode}/game`))).val();
   if (!fresh || fresh.currentTurn !== botPid || fresh.lastDiscard) return;
@@ -2145,7 +2145,7 @@ async function botPong(botPid, tile, hand, myMelds) {
     pendingAction: null,
   });
   // Then discard
-  await new Promise(r => setTimeout(r, 700));
+  await new Promise(r => setTimeout(r, 400));
   const fresh2 = (await get(ref(db, `rooms/${roomCode}/game`))).val();
   if (fresh2?.currentTurn === botPid) {
     await botDiscard(botPid, (fresh2.hands || {})[botPid] || [], (fresh2.melds || {})[botPid] || [], fresh2);
@@ -2198,7 +2198,7 @@ async function botChow(botPid, tile, otherTwo, myMelds, gs) {
     [`discards/${lastBy}`]: discarderPile,
     currentTurn: botPid, lastDiscard: null, pendingAction: null,
   });
-  await new Promise(r => setTimeout(r, 700));
+  await new Promise(r => setTimeout(r, 400));
   const fresh2 = (await get(ref(db, `rooms/${roomCode}/game`))).val();
   if (fresh2?.currentTurn === botPid) {
     await botDiscard(botPid, (fresh2.hands || {})[botPid] || [], (fresh2.melds || {})[botPid] || [], fresh2);
