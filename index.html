@@ -619,7 +619,7 @@ function getKongOptions(hand, tile, melds) {
 // ============================================================
 // TAI CALCULATION
 // ============================================================
-function calcTai(hand, melds, flowers, isSelfDraw, isDealer, wallRemaining, isFirstDraw, seatIdx) {
+function calcTai(hand, melds, flowers, isSelfDraw, isDealer, wallRemaining, isFirstDraw, seatIdx, dealerIdx, round) {
   if (isFirstDraw && isSelfDraw) {
     const label = isDealer ? '天胡' : '地胡';
     return { tai: isDealer ? 16 : 8, breakdown: [label] };
@@ -659,6 +659,16 @@ function calcTai(hand, melds, flowers, isSelfDraw, isDealer, wallRemaining, isFi
   const wPair = wc.filter(c => c === 2).length;
   if (wTrip === 4)              { tai += 8; breakdown.push('大四喜 +8台'); }
   else if (wTrip === 3 && wPair === 1) { tai += 5; breakdown.push('小四喜 +5台'); }
+  else {
+    // 門風 (seat wind) and 圈風 (round wind) — +1台 each for triplet
+    if (typeof seatIdx === 'number' && typeof dealerIdx === 'number') {
+      const relSeat = (seatIdx - dealerIdx + 4) % 4; // 0=東,1=南,2=西,3=北
+      const seatWindTile = `${relSeat + 1}z`;
+      if (wc[relSeat] >= 3) { tai++; breakdown.push(`門風(${WINDS[relSeat]}) +1台`); }
+      const roundWindIdx = Math.min(Math.floor(((round || 1) - 1) / 4), 3);
+      if (roundWindIdx !== relSeat && wc[roundWindIdx] >= 3) { tai++; breakdown.push(`圈風(${WINDS[roundWindIdx]}) +1台`); }
+    }
+  }
 
   // 碰碰胡 (all pungs/kongs, no sequences)
   const allMelds = melds || [];
@@ -894,7 +904,8 @@ async function fireDeclareWin() {
   const wallLeft = gameState.wall.length - (gameState.wallIndex || 0);
   const isDealer = gameState.dealer === myPlayerId;
   const seatIdx  = PLAYER_IDS.indexOf(myPlayerId);
-  const { tai, breakdown } = calcTai(fullHand, myMelds, myFlows, isSelfDraw, isDealer, wallLeft, false, seatIdx);
+  const dealerIdx = PLAYER_IDS.indexOf(gameState.dealer);
+  const { tai, breakdown } = calcTai(fullHand, myMelds, myFlows, isSelfDraw, isDealer, wallLeft, false, seatIdx, dealerIdx, gameState.round);
 
   const discarder = isKongRob ? pendKong.by : (isClaim ? gameState.lastDiscard?.by : null);
   await update(ref(db, `rooms/${roomCode}/game`), {
@@ -1543,7 +1554,8 @@ async function _runBotTurnInner(gs, botPid) {
         const wallLeft = (fresh.wall || []).length - (fresh.wallIndex || 0);
         const isDealer = fresh.dealer === botPid;
         const seatIdx  = PLAYER_IDS.indexOf(botPid);
-        const { tai, breakdown } = calcTai(fullHand, botMelds, myFlows, false, isDealer, wallLeft, false, seatIdx);
+        const dIdx = PLAYER_IDS.indexOf(fresh.dealer);
+        const { tai, breakdown } = calcTai(fullHand, botMelds, myFlows, false, isDealer, wallLeft, false, seatIdx, dIdx, fresh.round);
         await update(ref(db, `rooms/${roomCode}/game`), {
           status: 'won', winner: botPid, pendingKong: null,
           winInfo: { tai, breakdown: breakdown.join('，'), isSelfDraw: false, hand: fullHand, discarder: gs.pendingKong.by },
@@ -1765,7 +1777,8 @@ async function botDeclareWin(botPid, isSelfDraw, gs) {
   const wallLeft = (gs.wall || []).length - (gs.wallIndex || 0);
   const isDealer = gs.dealer === botPid;
   const seatIdx  = PLAYER_IDS.indexOf(botPid);
-  const { tai, breakdown } = calcTai(fullHand, myMelds, myFlows, isSelfDraw, isDealer, wallLeft, false, seatIdx);
+  const dIdx = PLAYER_IDS.indexOf(gs.dealer);
+  const { tai, breakdown } = calcTai(fullHand, myMelds, myFlows, isSelfDraw, isDealer, wallLeft, false, seatIdx, dIdx, gs.round);
   await update(ref(db, `rooms/${roomCode}/game`), {
     status: 'won',
     winner: botPid,

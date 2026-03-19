@@ -12,3 +12,4 @@
 - feat: bot can now chow (吃) tiles from the left player, with botChow function and canChow accepting claimerPid
 - feat: 連莊 — dealer stays when they win or draw; rotates to next player otherwise; round number advances
 - fix: clean up _checkSets dead code; add bot kong logic (暗槓/加槓) and botKong function
+- feat: calcTai add 門風 (seat wind) and 圈風 (round wind) triplet scoring +1台 each
