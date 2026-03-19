@@ -865,11 +865,16 @@ async function fireDeclareWin() {
 
   if (!canWin(fullHand, myMelds)) { showToast('牌型不符合胡牌條件'); return; }
 
+  // 一炮多響: if someone already won from this discard, don't overwrite
+  if (isClaim || isKongRob) {
+    const freshGs = (await get(ref(db, `rooms/${roomCode}/game`))).val();
+    if (freshGs?.status === 'won') { showToast('其他玩家已先胡牌'); return; }
+  }
+
   const wallLeft = gameState.wall.length - (gameState.wallIndex || 0);
   const isDealer = gameState.dealer === myPlayerId;
   const seatIdx  = PLAYER_IDS.indexOf(myPlayerId);
   const { tai, breakdown } = calcTai(fullHand, myMelds, myFlows, isSelfDraw, isDealer, wallLeft, false, seatIdx);
-  // In Taiwan mahjong, 平胡 (0 tai) is still valid — no minimum requirement enforced
 
   const discarder = isKongRob ? pendKong.by : (isClaim ? gameState.lastDiscard?.by : null);
   await update(ref(db, `rooms/${roomCode}/game`), {
@@ -1517,11 +1522,16 @@ async function _runBotTurnInner(gs, botPid) {
 
   // --- Someone discarded, bot can claim ---
   if (lastTile && lastBy !== botPid) {
-    await new Promise(r => setTimeout(r, 800 + Math.random() * 800));
+    // Priority delay: closer to discarder = shorter wait (一炮多響 resolution)
+    const discarderIdx = PLAYER_IDS.indexOf(lastBy);
+    const botIdx = PLAYER_IDS.indexOf(botPid);
+    const dist = (botIdx - discarderIdx + 4) % 4; // 1=next, 2=across, 3=prev
+    await new Promise(r => setTimeout(r, 400 + dist * 300 + Math.random() * 300));
     const fresh = (await get(ref(db, `rooms/${roomCode}/game`))).val();
     if (!fresh || fresh.lastDiscard?.tile !== lastTile) return;
 
-    // 1. Win check
+    // 1. Win check (一炮多響: skip if someone already won)
+    if (fresh.status === 'won') return;
     if (canWin([...botHand, lastTile], botMelds)) {
       await botDeclareWin(botPid, false, fresh);
       return;
