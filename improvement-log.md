@@ -33,3 +33,4 @@
 - ui: blue table theme, wood frame border, 3D tile shadows, glowing last discard, name plate backgrounds, rich bottom info bar
 - ui: wood shelf hand area, thick tile bottom edges, cloth texture, flower border, dark action bar
 - ui: face-down tile backs for other players, enhanced timer bar, discard tile appear animation
+- feat: tenpai detection (getTenpaiTiles) + green outline on tiles that maintain tenpai when discarded

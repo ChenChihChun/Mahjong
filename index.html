@@ -119,6 +119,7 @@ html, body { width: 100%; height: 100%; overflow: hidden; background: #1a4a1a; f
 .tile.large  { width: var(--tw-lg); height: var(--th-lg); font-size: calc(var(--th-lg) * 0.38); }
 .tile.selected { transform: translateY(-12px); box-shadow: 0 12px 24px rgba(0,0,0,0.6), 0 0 12px rgba(245,197,24,0.4), inset 0 1px 0 rgba(255,255,255,0.95); border-color: #f5c518; outline: 2px solid #f5c518; }
 .tile.flower { background: linear-gradient(160deg, #fffbe8 0%, #f0e0a0 100%); border-color: #c8a050; }
+.tile.tenpai-safe { outline: 2px solid rgba(80,200,80,0.6); outline-offset: 1px; }
 .tile.discard-last { outline: 2px solid #f5c518; outline-offset: 1px; box-shadow: 0 0 10px rgba(245,197,24,0.6), 0 0 20px rgba(245,197,24,0.3), 0 2px 4px rgba(0,0,0,0.4); animation: tile-glow 1.5s ease-in-out infinite alternate, tile-appear 0.3s ease-out; }
 @keyframes tile-appear { from { transform: scale(1.3); opacity: 0.5; } to { transform: scale(1); opacity: 1; } }
 @keyframes tile-glow { from { box-shadow: 0 0 8px rgba(245,197,24,0.5), 0 2px 4px rgba(0,0,0,0.4); } to { box-shadow: 0 0 16px rgba(245,197,24,0.8), 0 0 30px rgba(245,197,24,0.3), 0 2px 4px rgba(0,0,0,0.4); } }
@@ -621,6 +622,19 @@ function canWin(hand, melds) {
   const setsNeeded = 5 - (melds || []).length;
   if (hand.length !== setsNeeded * 3 + 2) return false;
   return _checkWin(sortTiles(hand), setsNeeded);
+}
+
+// Returns array of tiles that would complete the hand (聽牌偵測)
+function getTenpaiTiles(hand, melds) {
+  const setsNeeded = 5 - (melds || []).length;
+  if (hand.length !== setsNeeded * 3 + 1) return []; // Need exactly one tile short of winning
+  const allPossible = [];
+  // Check all possible tiles (1-9m, 1-9p, 1-9s, 1-7z)
+  ['m','p','s'].forEach(suit => {
+    for (let n = 1; n <= 9; n++) allPossible.push(`${n}${suit}`);
+  });
+  for (let n = 1; n <= 7; n++) allPossible.push(`${n}z`);
+  return allPossible.filter(t => canWin([...hand, t], melds));
 }
 
 function _checkWin(sorted, setsNeeded) {
@@ -1144,8 +1158,23 @@ function renderMyHand() {
 
   const tilesContainer = el('hand-tiles');
   while (tilesContainer.firstChild) tilesContainer.removeChild(tilesContainer.firstChild);
+  // Check tenpai status for each possible discard (only when it's our turn to discard)
+  const isMyTurn = gameState?.currentTurn === myPlayerId;
+  const needDiscard = isMyTurn && !gameState?.lastDiscard && hand.length === 17 - 3 * myMelds.length;
+  const tenpaiAfterDiscard = {};
+  if (needDiscard) {
+    hand.forEach((t, i) => {
+      const remaining = hand.filter((_, j) => j !== i);
+      const tp = getTenpaiTiles(remaining, myMelds);
+      if (tp.length > 0) tenpaiAfterDiscard[i] = tp;
+    });
+  }
   hand.forEach((t, i) => {
-    const tileEl = makeTileEl(t, 'large', i === selectedTileIdx ? 'selected' : '');
+    const extra = i === selectedTileIdx ? 'selected' : (tenpaiAfterDiscard[i] ? 'tenpai-safe' : '');
+    const tileEl = makeTileEl(t, 'large', extra);
+    if (tenpaiAfterDiscard[i]) {
+      tileEl.title = `聽: ${tenpaiAfterDiscard[i].map(tileLabel).join(', ')}`;
+    }
     tileEl.addEventListener('click', () => {
       selectedTileIdx = (selectedTileIdx === i) ? null : i;
       renderMyHand();
