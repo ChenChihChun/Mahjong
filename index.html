@@ -77,9 +77,9 @@ html, body { width: 100%; height: 100%; overflow: hidden; background: #1a4a1a; f
 }
 
 /* ===== GAME SCREEN ===== */
-#screen-game { background: radial-gradient(ellipse at center, #1a5a3a 0%, #0a2a1a 100%); padding: 0; justify-content: flex-start; }
+#screen-game { background: radial-gradient(ellipse at center, #1a4a5a 0%, #0a1a2a 100%); padding: 0; justify-content: flex-start; }
 .game-wrap { width: 100%; height: 100%; display: grid; grid-template-rows: 1fr auto; overflow: hidden; }
-.game-board { position: relative; overflow: hidden; min-height: 0; background: radial-gradient(ellipse at 50% 60%, rgba(40,120,90,0.3) 0%, transparent 70%); }
+.game-board { position: relative; overflow: hidden; min-height: 0; background: radial-gradient(ellipse at 50% 55%, rgba(30,90,110,0.35) 0%, transparent 65%); }
 
 /* Avatar positions — match 明星三缺一 layout: across=top-center, left/right=sides, me=bottom-right */
 .avatar-corner { position: absolute; display: flex; flex-direction: column; align-items: center; gap: 2px; z-index: 10; }
@@ -87,25 +87,25 @@ html, body { width: 100%; height: 100%; overflow: hidden; background: #1a4a1a; f
 .avatar-corner.p-top-right { top: 50%; right: 2px; transform: translateY(-50%); } /* right player = right side */
 .avatar-corner.p-bot-left  { top: 50%; left: 2px; transform: translateY(-50%); }  /* left player = left side */
 .avatar-corner.p-bot-right { bottom: 2px; right: 2px; }                            /* me = bottom right */
-.avatar-face { width: var(--avatar-sz); height: var(--avatar-sz); border-radius: 50%; border: 2px solid rgba(255,255,255,0.5); background: linear-gradient(135deg, #333 0%, #1a1a1a 100%); display: flex; align-items: center; justify-content: center; font-size: calc(var(--avatar-sz) * 0.5); box-shadow: 0 2px 8px rgba(0,0,0,0.5); }
-.avatar-name-lbl { font-size: min(2.2vmin, 11px); font-weight: 700; text-shadow: 0 1px 4px #000, 0 0 8px rgba(0,0,0,0.8); max-width: 90px; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.avatar-score-lbl { font-size: min(2vmin, 10px); color: #f5c518; text-shadow: 0 1px 3px rgba(0,0,0,0.7); }
+.avatar-face { width: var(--avatar-sz); height: var(--avatar-sz); border-radius: 50%; border: 2px solid rgba(255,255,255,0.6); background: linear-gradient(135deg, #3a3a4a 0%, #1a1a2a 100%); display: flex; align-items: center; justify-content: center; font-size: calc(var(--avatar-sz) * 0.55); box-shadow: 0 3px 10px rgba(0,0,0,0.6); }
+.avatar-name-lbl { font-size: min(2.2vmin, 11px); font-weight: 700; max-width: 90px; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; background: rgba(0,0,0,0.6); padding: 1px 6px; border-radius: 4px; }
+.avatar-score-lbl { font-size: min(2vmin, 10px); color: #f5c518; font-weight: 700; background: rgba(0,0,0,0.4); padding: 0 4px; border-radius: 3px; }
 
 /* Discard zones — top/bottom inset clears avatar+name+score, left/right clears avatar width */
-.discard-area { position: absolute; inset: calc(var(--avatar-sz) + 22px) calc(var(--avatar-sz) + 6px); display: grid; grid-template-areas: ". top ." "left center right" ". bot ."; grid-template-columns: 1fr 2fr 1fr; grid-template-rows: 1fr 1.5fr 1fr; gap: 3px; border: 2px solid rgba(100,80,40,0.3); border-radius: 12px; background: rgba(0,30,20,0.15); box-shadow: inset 0 0 40px rgba(0,0,0,0.15); padding: 4px; }
-.discard-zone { display: flex; flex-wrap: wrap; align-content: flex-start; gap: 1px; padding: 3px; border-radius: 4px; background: rgba(0,40,30,0.15); overflow: hidden; }
+.discard-area { position: absolute; inset: calc(var(--avatar-sz) + 22px) calc(var(--avatar-sz) + 6px); display: grid; grid-template-areas: ". top ." "left center right" ". bot ."; grid-template-columns: 1fr 2fr 1fr; grid-template-rows: 1fr 1.5fr 1fr; gap: 3px; border: 3px solid rgba(120,100,60,0.4); border-radius: 10px; background: linear-gradient(135deg, rgba(20,60,80,0.25) 0%, rgba(10,40,60,0.15) 100%); box-shadow: inset 0 0 40px rgba(0,0,0,0.2), 0 2px 8px rgba(0,0,0,0.3); padding: 4px; }
+.discard-zone { display: flex; flex-wrap: wrap; align-content: flex-start; gap: 1px; padding: 3px; border-radius: 4px; background: rgba(10,40,60,0.15); overflow: hidden; }
 .dz-top    { grid-area: top; }
 .dz-left   { grid-area: left; }
 .dz-right  { grid-area: right; }
 .dz-bot    { grid-area: bot; }
-.dz-center { grid-area: center; border: 2px solid rgba(200,180,120,0.3); border-radius: 12px; background: radial-gradient(ellipse, rgba(20,80,60,0.4) 0%, rgba(10,40,30,0.2) 100%); display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 4px; box-shadow: inset 0 0 30px rgba(0,0,0,0.2), 0 0 20px rgba(0,0,0,0.1); text-align: center; }
+.dz-center { grid-area: center; border: 2px solid rgba(200,180,120,0.25); border-radius: 10px; background: radial-gradient(ellipse, rgba(15,50,70,0.5) 0%, rgba(10,35,50,0.2) 100%); display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 4px; box-shadow: inset 0 0 30px rgba(0,0,0,0.25); text-align: center; }
 
 /* ===== TILE STYLING — CSS rendered, no external images ===== */
 .tile {
   display: inline-flex; align-items: center; justify-content: center;
-  background: linear-gradient(160deg, #fffff8 0%, #ede8d0 100%);
-  border-radius: 3px; border: 1px solid #b0a080;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.95), inset 0 -1px 0 rgba(0,0,0,0.1);
+  background: linear-gradient(170deg, #fffff8 0%, #f5f0e0 40%, #e8e0c8 100%);
+  border-radius: 4px; border: 1px solid #a09070;
+  box-shadow: 0 3px 6px rgba(0,0,0,0.5), 0 1px 2px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.98), inset 0 -2px 0 rgba(0,0,0,0.08);
   cursor: pointer; user-select: none;
   transition: transform 0.12s, box-shadow 0.12s;
   position: relative; flex-shrink: 0; overflow: hidden;
@@ -115,7 +115,8 @@ html, body { width: 100%; height: 100%; overflow: hidden; background: #1a4a1a; f
 .tile.large  { width: var(--tw-lg); height: var(--th-lg); font-size: calc(var(--th-lg) * 0.38); }
 .tile.selected { transform: translateY(-12px); box-shadow: 0 12px 24px rgba(0,0,0,0.6), 0 0 12px rgba(245,197,24,0.4), inset 0 1px 0 rgba(255,255,255,0.95); border-color: #f5c518; outline: 2px solid #f5c518; }
 .tile.flower { background: linear-gradient(160deg, #fffbe8 0%, #f0e0a0 100%); border-color: #c8a050; }
-.tile.discard-last { outline: 2px solid #f5c518; outline-offset: 1px; }
+.tile.discard-last { outline: 2px solid #f5c518; outline-offset: 1px; box-shadow: 0 0 10px rgba(245,197,24,0.6), 0 0 20px rgba(245,197,24,0.3), 0 2px 4px rgba(0,0,0,0.4); animation: tile-glow 1.5s ease-in-out infinite alternate; }
+@keyframes tile-glow { from { box-shadow: 0 0 8px rgba(245,197,24,0.5), 0 2px 4px rgba(0,0,0,0.4); } to { box-shadow: 0 0 16px rgba(245,197,24,0.8), 0 0 30px rgba(245,197,24,0.3), 0 2px 4px rgba(0,0,0,0.4); } }
 /* CSS tile inner layout */
 .tile-body { display:flex; flex-direction:column; align-items:center; justify-content:center; width:100%; height:100%; line-height:1; gap: 0; }
 .tile-top  { font-weight:900; line-height:1; font-size:1em; }
@@ -129,7 +130,7 @@ html, body { width: 100%; height: 100%; overflow: hidden; background: #1a4a1a; f
 .c-flower { color:#885500; }
 
 /* Hand area */
-.hand-area { background: linear-gradient(to bottom, rgba(0,0,0,0.45), rgba(0,0,0,0.55)); border-top: 2px solid rgba(245,197,24,0.3); padding: 6px 8px 3px; }
+.hand-area { background: linear-gradient(to bottom, rgba(10,30,50,0.7), rgba(5,15,30,0.85)); border-top: 2px solid rgba(200,170,80,0.35); padding: 6px 8px 3px; }
 .hand-tiles { display: flex; flex-wrap: nowrap; gap: 2px; overflow-x: auto; padding-bottom: 3px; min-height: calc(var(--th-lg) + 4px); align-items: flex-end; scrollbar-width: none; }
 .hand-tiles::-webkit-scrollbar { display: none; }
 .hand-melds { display: flex; gap: 4px; margin-top: 3px; flex-wrap: wrap; }
@@ -165,7 +166,7 @@ html, body { width: 100%; height: 100%; overflow: hidden; background: #1a4a1a; f
 .action-notif.show { opacity: 1; }
 
 /* Bottom info bar — like 明星三缺一 */
-.bottom-info-bar { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 3px 12px; background: linear-gradient(to right, #1a3a2a, #0a2a1a); font-size: min(2.5vmin, 0.75rem); color: #ccc; border-top: 1px solid rgba(245,197,24,0.2); }
+.bottom-info-bar { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 3px 12px; background: linear-gradient(to right, #0a2030, #051520); font-size: min(2.5vmin, 0.75rem); color: #ccc; border-top: 1px solid rgba(200,170,80,0.2); }
 .bottom-info-bar span { white-space: nowrap; }
 #info-wind-seat { color: #f5c518; font-weight: 900; font-size: 1.1em; }
 #info-dealer-tag { background: #c44; color: #fff; font-size: 0.85em; padding: 1px 6px; border-radius: 4px; font-weight: 700; }
@@ -1075,7 +1076,9 @@ function renderGameBoard() {
   txt('info-wind-seat', WINDS[myRelSeat] || '東');
   el('info-dealer-tag').style.display = gameState.dealer === myPlayerId ? 'inline' : 'none';
   txt('info-my-name', (roomPlayers[myPlayerId]?.name || myName));
-  txt('info-money', `💰 ${scores[myPlayerId] || 0}`);
+  const perTai = roomSettings.tai || 20;
+  const baseBet = roomSettings.base || 50;
+  txt('info-money', `💰 ${scores[myPlayerId] || 0}　底${baseBet}/台${perTai}`);
 
   // Seats: cornerRelMap[cornerIdx] = relSeat (0=me,1=right,2=across,3=left)
   const myAbsSeat = PLAYER_IDS.indexOf(myPlayerId);

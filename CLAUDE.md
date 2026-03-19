@@ -37,13 +37,23 @@
 - [x] 持續優化 盡量比照 C:\Users\USER\Pictures\maxresdefault.jpg — bottom info bar, table color
 - [x] 持續優化 盡量比照 C:\Users\USER\Pictures\maxresdefault.jpg — table frame border
 - [x] 持續優化 盡量比照 C:\Users\USER\Pictures\maxresdefault.jpg — fix Firebase null errors
-- [] 持續優化 盡量比照 C:\Users\USER\Pictures\maxresdefault.jpg
-- [] 持續優化 盡量比照 C:\Users\USER\Pictures\maxresdefault.jpg
+- [x] 持續優化 盡量比照 C:\Users\USER\Pictures\maxresdefault.jpg，找出與圖像中10處不同的地方 寫入待辦任務 進行持續優化
+- [x] UI差異1: 牌桌改為藍色系（參考明星三缺一的青藍色桌面）
+- [x] UI差異2: 牌桌加木框邊框效果（3D深度感）
+- [] UI差異3: 其他玩家的手牌顯示為藍色牌背（face-down）
+- [x] UI差異4: 手牌加3D陰影/浮起效果
+- [x] UI差異5: 出牌區的牌散落效果+最後一張發光
+- [x] UI差異6: 底部狀態列加豐富資訊（局數/底台/金額圖示）
+- [] UI差異7: 碰/吃/槓/胡按鈕改為浮動在手牌上方
+- [x] UI差異8: 頭像改大+加玩家名牌背景框
+- [] UI差異9: 輪到的玩家用光暈效果而非浮動標籤
+- [] UI差異10: 中央區域顯示骰子/開始動畫效果
+
 
 ## 任務執行規則
 - 每輪取第一個 `[ ]` 任務來做
 - 完成後把 `[ ]` 改成 `[x]`
-- 如果所有任務都是 `[x]`，則自動分析 index.html
+- 如果所有任務都是 `[x]`，則自動分析 C:\Users\USER\Pictures\maxresdefault.jpg
   找下100個最值得改善的功能加到清單，繼續執行
 - 不需要重新分析整個 index.html，直接針對該任務找相關函式
 - 只讀 index.html 的 `<script>` 區塊，跳過 CSS 和 HTML 部分

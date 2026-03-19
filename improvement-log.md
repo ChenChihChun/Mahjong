@@ -30,3 +30,4 @@
 - feat: lobby redesign — landscape 2-column layout, game settings (金額/底/台/出牌秒/碰牌秒), settings stored in Firebase and used in gameplay
 - ui: reposition avatars to match 明星三缺一 — across=top-center, left/right=sides, me=bottom-right
 - ui: add bottom info bar (wind/dealer/name/money), darker table with radial gradient
+- ui: blue table theme, wood frame border, 3D tile shadows, glowing last discard, name plate backgrounds, rich bottom info bar
