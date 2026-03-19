@@ -1925,14 +1925,18 @@ function startBotBrain() {
 }
 
 const botBusy = {};
+const botLastState = {}; // Track last processed state to avoid reprocessing
 async function runBotTurn(gs, botPid) {
   if (botBusy[botPid]) return;
+  // Create a state key to avoid reprocessing the same state
+  const stateKey = `${gs.currentTurn}:${gs.lastDiscard?.tile || ''}:${gs.wallIndex}:${gs.pendingKong?.tile || ''}`;
+  if (botLastState[botPid] === stateKey) return;
+  botLastState[botPid] = stateKey;
   botBusy[botPid] = true;
   try {
     await _runBotTurnInner(gs, botPid);
   } finally {
-    // Delay releasing busy flag so Firebase listener can re-trigger after state changes settle
-    setTimeout(() => { botBusy[botPid] = false; }, 100);
+    botBusy[botPid] = false;
   }
 }
 async function _runBotTurnInner(gs, botPid) {
