@@ -1586,8 +1586,8 @@ function listenToGame() {
         setTimeout(() => {
           if (gameState?.currentTurn !== myPlayerId || gameState?.lastDiscard) return;
           const gs = gameState;
-          const hLen = (gs.hands[myPlayerId] || []).length;
-          const mLen = (gs.melds[myPlayerId] || []).length;
+          const hLen = ((gs.hands || {})[myPlayerId] || []).length;
+          const mLen = ((gs.melds || {})[myPlayerId] || []).length;
           if (hLen < 17 - 3 * mLen) fireDraw();
         }, 400);
       } else {
@@ -2053,7 +2053,7 @@ async function botChow(botPid, tile, otherTwo, myMelds, gs) {
   const meldTiles = sortTiles([tile, ...otherTwo]);
   const newMelds = [...myMelds, { type: '吃', tiles: meldTiles }];
   const lastBy = gs.lastDiscard?.by;
-  const discarderPile = [...(gs.discards[lastBy] || [])];
+  const discarderPile = [...((gs.discards || {})[lastBy] || [])];
   discarderPile.pop();
   await update(ref(db, `rooms/${roomCode}/game`), {
     [`hands/${botPid}`]: filtered, [`melds/${botPid}`]: newMelds,
