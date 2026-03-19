@@ -1363,7 +1363,7 @@ function showWinScreen(winInfo, winnerPid) {
     const dealerInvolved = winnerIsDealer || loserIsDealer;
     let pay = 0;
     if (winInfo.isSelfDraw) pay = (dealerInvolved ? basePayment * 2 : basePayment) + baseBet; // 自摸加底
-    else if (isDiscarder)   pay = basePayment * 3 * (dealerInvolved ? 2 : 1);
+    else if (isDiscarder)   pay = basePayment * (dealerInvolved ? 2 : 1); // 放槍者付底+台，莊家加倍
     scores[winnerPid] = (scores[winnerPid] || 0) + pay;
     scores[pid]       = (scores[pid] || 0) - pay;
   });
