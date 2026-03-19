@@ -83,6 +83,13 @@
 - [x] 手機真的可以玩? → responsive CSS已實作，已測試多種手機尺寸
 - [x] 我們不一定是莊家 也可能是電腦莊家 → random first dealer
 - [x] 至少玩個幾輪看看 → 已用Playwright測試，bot可正常出牌，修正null guard問題
+- [x] 摸牌和手牌分隔顯示
+- [x] 莊家計分修正（放槍不再3x，改為標準台灣規則）
+- [x] 胡牌畫面顯示完整牌組（手牌+鳴牌+花牌）
+- [x] stuck game detector 推動卡住的bot（10秒偵測）
+- [x] bot出牌應該更快 → botBusy release delay 100ms
+- [] 遊戲結束後「再來一局」應正常運作
+- [] 白板(5z)顯示為空白方塊，應該有邊框辨識
 
 
 ## 任務執行規則

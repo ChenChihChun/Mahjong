@@ -1889,7 +1889,12 @@ const botBusy = {};
 async function runBotTurn(gs, botPid) {
   if (botBusy[botPid]) return;
   botBusy[botPid] = true;
-  try { await _runBotTurnInner(gs, botPid); } finally { botBusy[botPid] = false; }
+  try {
+    await _runBotTurnInner(gs, botPid);
+  } finally {
+    // Delay releasing busy flag so Firebase listener can re-trigger after state changes settle
+    setTimeout(() => { botBusy[botPid] = false; }, 100);
+  }
 }
 async function _runBotTurnInner(gs, botPid) {
   const { currentTurn, lastDiscard, wall, wallIndex } = gs;
