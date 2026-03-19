@@ -1586,14 +1586,18 @@ function listenToGame() {
       const myHandNow = (gameState.hands || {})[myPlayerId] || [];
       const expectedLen = 17 - 3 * ((gameState.melds || {})[myPlayerId]||[]).length;
       if (myHandNow.length < expectedLen) {
-        // Hand is short — auto-draw
-        setTimeout(() => {
-          if (gameState?.currentTurn !== myPlayerId || gameState?.lastDiscard) return;
-          const gs = gameState;
-          const hLen = ((gs.hands || {})[myPlayerId] || []).length;
-          const mLen = ((gs.melds || {})[myPlayerId] || []).length;
-          if (hLen < 17 - 3 * mLen) fireDraw();
-        }, 400);
+        // Hand is short — auto-draw (use flag to prevent duplicate draws)
+        if (!window._autoDrawPending) {
+          window._autoDrawPending = true;
+          setTimeout(() => {
+            window._autoDrawPending = false;
+            if (gameState?.currentTurn !== myPlayerId || gameState?.lastDiscard) return;
+            const gs = gameState;
+            const hLen = ((gs.hands || {})[myPlayerId] || []).length;
+            const mLen = ((gs.melds || {})[myPlayerId] || []).length;
+            if (hLen < 17 - 3 * mLen) fireDraw();
+          }, 500);
+        }
       } else {
         // Hand is full — player must discard.
         const discardSecs = roomSettings.timer || 15;
