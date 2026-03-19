@@ -1011,13 +1011,15 @@ function showWinScreen(winInfo, winnerPid) {
 
   // Score update
   const basePayment = Math.pow(2, Math.min(winInfo.tai, 8)) * 10;
+  const winnerIsDealer = gameState?.dealer === winnerPid;
   PLAYER_IDS.forEach(pid => {
     if (pid === winnerPid) return;
-    const isDiscarder = !winInfo.isSelfDraw && pid === winInfo.discarder;
-    const isDealer    = gameState?.dealer === pid && winnerPid !== gameState?.dealer;
+    const isDiscarder    = !winInfo.isSelfDraw && pid === winInfo.discarder;
+    const loserIsDealer  = gameState?.dealer === pid;
+    const dealerInvolved = winnerIsDealer || loserIsDealer;
     let pay = 0;
-    if (winInfo.isSelfDraw) pay = isDealer ? basePayment * 2 : basePayment;
-    else if (isDiscarder)   pay = basePayment * 3;
+    if (winInfo.isSelfDraw) pay = dealerInvolved ? basePayment * 2 : basePayment;
+    else if (isDiscarder)   pay = dealerInvolved ? basePayment * 3 : basePayment * 3;
     scores[winnerPid] = (scores[winnerPid] || 0) + pay;
     scores[pid]       = (scores[pid] || 0) - pay;
   });
