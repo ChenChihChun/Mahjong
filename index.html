@@ -619,7 +619,7 @@ function getKongOptions(hand, tile, melds) {
 // ============================================================
 // TAI CALCULATION
 // ============================================================
-function calcTai(hand, melds, flowers, isSelfDraw, isDealer, wallRemaining, isFirstDraw, seatIdx, dealerIdx, round) {
+function calcTai(hand, melds, flowers, isSelfDraw, isDealer, wallRemaining, isFirstDraw, seatIdx, dealerIdx, round, isKongDraw) {
   if (isFirstDraw && isSelfDraw) {
     const label = isDealer ? '天胡' : '地胡';
     return { tai: isDealer ? 16 : 8, breakdown: [label] };
@@ -629,6 +629,7 @@ function calcTai(hand, melds, flowers, isSelfDraw, isDealer, wallRemaining, isFi
   const allTiles  = [...hand, ...(melds || []).flatMap(m => m.tiles)];
 
   if (isSelfDraw)                                   { tai++; breakdown.push('自摸 +1台'); }
+  if (isSelfDraw && isKongDraw)                     { tai++; breakdown.push('槓上開花 +1台'); }
   if (!isSelfDraw && (melds || []).filter(m => m.type !== '暗槓').length === 0)
                                                     { tai++; breakdown.push('門清 +1台'); }
   if (wallRemaining === 0)
@@ -775,6 +776,7 @@ async function fireDiscard() {
     lastDiscard: { tile, by: myPlayerId },
     currentTurn: nextPlayer(myPlayerId),
     pendingAction: null,
+    kongDrawPid: null,
   });
   selectedTileIdx = null;
 }
@@ -863,6 +865,7 @@ async function fireKong(kongOpt) {
     [`hands/${myPlayerId}`]: hand, [`melds/${myPlayerId}`]: melds,
     [`flowers/${myPlayerId}`]: flowers, wallIndex: wallIdx,
     currentTurn: myPlayerId, lastDiscard: null, pendingAction: null,
+    kongDrawPid: myPlayerId,
   });
   showNotif('槓！');
 }
@@ -886,6 +889,7 @@ async function completeKong(pid, tile, gs) {
     [`hands/${pid}`]: hand, [`melds/${pid}`]: melds,
     [`flowers/${pid}`]: flowers, wallIndex: wallIdx,
     currentTurn: pid, lastDiscard: null, pendingAction: null, pendingKong: null,
+    kongDrawPid: pid,
   });
 }
 
@@ -927,7 +931,8 @@ async function fireDeclareWin() {
   const isDealer = gameState.dealer === myPlayerId;
   const seatIdx  = PLAYER_IDS.indexOf(myPlayerId);
   const dealerIdx = PLAYER_IDS.indexOf(gameState.dealer);
-  const { tai, breakdown } = calcTai(fullHand, myMelds, myFlows, isSelfDraw, isDealer, wallLeft, false, seatIdx, dealerIdx, gameState.round);
+  const isKongDraw = isSelfDraw && gameState.kongDrawPid === myPlayerId;
+  const { tai, breakdown } = calcTai(fullHand, myMelds, myFlows, isSelfDraw, isDealer, wallLeft, false, seatIdx, dealerIdx, gameState.round, isKongDraw);
 
   const discarder = isKongRob ? pendKong.by : (isClaim ? gameState.lastDiscard?.by : null);
   await update(ref(db, `rooms/${roomCode}/game`), {
@@ -1800,6 +1805,7 @@ async function botKong(botPid, kongOpt, gs) {
     [`hands/${botPid}`]: hand, [`melds/${botPid}`]: melds,
     [`flowers/${botPid}`]: flowers, wallIndex: wallIdx,
     currentTurn: botPid, lastDiscard: null, pendingAction: null, pendingKong: null,
+    kongDrawPid: botPid,
   });
 }
 
@@ -1840,7 +1846,8 @@ async function botDeclareWin(botPid, isSelfDraw, gs) {
   const isDealer = gs.dealer === botPid;
   const seatIdx  = PLAYER_IDS.indexOf(botPid);
   const dIdx = PLAYER_IDS.indexOf(gs.dealer);
-  const { tai, breakdown } = calcTai(fullHand, myMelds, myFlows, isSelfDraw, isDealer, wallLeft, false, seatIdx, dIdx, gs.round);
+  const isKongDraw = isSelfDraw && gs.kongDrawPid === botPid;
+  const { tai, breakdown } = calcTai(fullHand, myMelds, myFlows, isSelfDraw, isDealer, wallLeft, false, seatIdx, dIdx, gs.round, isKongDraw);
   await update(ref(db, `rooms/${roomCode}/game`), {
     status: 'won',
     winner: botPid,
