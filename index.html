@@ -77,9 +77,9 @@ html, body { width: 100%; height: 100%; overflow: hidden; background: #1a4a1a; f
 }
 
 /* ===== GAME SCREEN ===== */
-#screen-game { background: radial-gradient(ellipse at center, #1e6b1e 0%, #0d3d0d 100%); padding: 0; justify-content: flex-start; }
+#screen-game { background: radial-gradient(ellipse at center, #1a5a3a 0%, #0a2a1a 100%); padding: 0; justify-content: flex-start; }
 .game-wrap { width: 100%; height: 100%; display: grid; grid-template-rows: 1fr auto; overflow: hidden; }
-.game-board { position: relative; overflow: hidden; min-height: 0; background: repeating-conic-gradient(rgba(255,255,255,0.015) 0% 25%, transparent 0% 50%) 0 0 / 40px 40px; }
+.game-board { position: relative; overflow: hidden; min-height: 0; background: radial-gradient(ellipse at 50% 60%, rgba(40,120,90,0.3) 0%, transparent 70%); }
 
 /* Avatar positions — match 明星三缺一 layout: across=top-center, left/right=sides, me=bottom-right */
 .avatar-corner { position: absolute; display: flex; flex-direction: column; align-items: center; gap: 2px; z-index: 10; }
@@ -98,7 +98,7 @@ html, body { width: 100%; height: 100%; overflow: hidden; background: #1a4a1a; f
 .dz-left   { grid-area: left; }
 .dz-right  { grid-area: right; }
 .dz-bot    { grid-area: bot; }
-.dz-center { grid-area: center; border: 2px solid rgba(245,197,24,0.25); border-radius: 12px; background: radial-gradient(ellipse, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.05) 100%); display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 4px; box-shadow: inset 0 0 20px rgba(0,0,0,0.15); text-align: center; }
+.dz-center { grid-area: center; border: 2px solid rgba(200,180,120,0.3); border-radius: 12px; background: radial-gradient(ellipse, rgba(20,80,60,0.4) 0%, rgba(10,40,30,0.2) 100%); display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 4px; box-shadow: inset 0 0 30px rgba(0,0,0,0.2), 0 0 20px rgba(0,0,0,0.1); text-align: center; }
 
 /* ===== TILE STYLING — CSS rendered, no external images ===== */
 .tile {
@@ -163,6 +163,14 @@ html, body { width: 100%; height: 100%; overflow: hidden; background: #1a4a1a; f
 .timer-text { font-size: 0.9rem; font-weight: 700; color: #f5c518; min-width: 24px; text-align: center; }
 .action-notif { position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.8); color: #f5c518; font-size: 2rem; font-weight: 900; padding: 16px 32px; border-radius: 16px; z-index: 30; pointer-events: none; opacity: 0; transition: opacity 0.3s; }
 .action-notif.show { opacity: 1; }
+
+/* Bottom info bar — like 明星三缺一 */
+.bottom-info-bar { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 3px 12px; background: linear-gradient(to right, #1a3a2a, #0a2a1a); font-size: min(2.5vmin, 0.75rem); color: #ccc; border-top: 1px solid rgba(245,197,24,0.2); }
+.bottom-info-bar span { white-space: nowrap; }
+#info-wind-seat { color: #f5c518; font-weight: 900; font-size: 1.1em; }
+#info-dealer-tag { background: #c44; color: #fff; font-size: 0.85em; padding: 1px 6px; border-radius: 4px; font-weight: 700; }
+#info-money { color: #f5c518; font-weight: 700; }
+.info-sep { color: rgba(255,255,255,0.2); }
 
 /* WIN screen */
 #screen-win { background: rgba(0,0,0,0.85); z-index: 100; }
@@ -378,6 +386,13 @@ html, body { width: 100%; height: 100%; overflow: hidden; background: #1a4a1a; f
         <button class="action-btn btn-win"  id="btn-win-claim"disabled>胡</button>
         <button class="action-btn btn-discard" id="btn-discard" disabled>出牌</button>
         <button class="action-btn btn-skip" id="btn-skip"     disabled>過</button>
+      </div>
+      <div class="bottom-info-bar" id="bottom-info-bar">
+        <span id="info-wind-seat">東</span>
+        <span id="info-dealer-tag">莊</span>
+        <span id="info-my-name">玩家</span>
+        <span class="info-sep">|</span>
+        <span id="info-money">💰 1000</span>
       </div>
     </div>
   </div>
@@ -1055,6 +1070,12 @@ function renderGameBoard() {
   txt('center-wind',  WINDS[myRelSeat] || '東');
   txt('center-round', `第${round || 1}局`);
   txt('center-wall',  `牌牆: ${wallLeft}`);
+
+  // Bottom info bar
+  txt('info-wind-seat', WINDS[myRelSeat] || '東');
+  el('info-dealer-tag').style.display = gameState.dealer === myPlayerId ? 'inline' : 'none';
+  txt('info-my-name', (roomPlayers[myPlayerId]?.name || myName));
+  txt('info-money', `💰 ${scores[myPlayerId] || 0}`);
 
   // Seats: cornerRelMap[cornerIdx] = relSeat (0=me,1=right,2=across,3=left)
   const myAbsSeat = PLAYER_IDS.indexOf(myPlayerId);
