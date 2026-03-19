@@ -475,6 +475,7 @@ let gameState  = null;
 let roomPlayers = {};
 let dbListeners = [];   // [ {ref, fn} ] for cleanup
 let selectedTileIdx = null;
+let lastDrawnTile = null; // Track the tile just drawn for visual separation
 let actionTimerInterval = null;
 let scores = { p1:0, p2:0, p3:0, p4:0 };
 let pendingChowOptions = [];
@@ -864,6 +865,7 @@ async function fireDraw() {
     return;
   }
   hand.push(tile);
+  lastDrawnTile = tile;
   const hadFlowerDraw = flowers.length > ((gameState.flowers || {})[myPlayerId] || []).length;
 
   await update(ref(db, `rooms/${roomCode}/game`), {
@@ -878,10 +880,23 @@ async function fireDraw() {
 
 async function fireDiscard() {
   if (selectedTileIdx === null) { showToast('請先選擇要出的牌'); return; }
-  const hand = sortTiles((gameState.hands || {})[myPlayerId] || []);
-  const tile  = hand[selectedTileIdx];
+  const rawHand = [...((gameState.hands || {})[myPlayerId] || [])];
+  // Build display order: sorted hand + drawn tile at end
+  let displayOrder;
+  if (lastDrawnTile && rawHand.length === 17 - 3 * ((gameState.melds || {})[myPlayerId] || []).length) {
+    const copy = [...rawHand];
+    const dIdx = copy.lastIndexOf(lastDrawnTile);
+    if (dIdx !== -1) copy.splice(dIdx, 1);
+    displayOrder = [...sortTiles(copy), lastDrawnTile];
+  } else {
+    displayOrder = sortTiles(rawHand);
+  }
+  const tile = displayOrder[selectedTileIdx];
   if (!tile) return;
-  const newHand = hand.filter((_, i) => i !== selectedTileIdx);
+  // Remove one instance of the tile from raw hand
+  const newHand = [...rawHand];
+  const rmIdx = newHand.indexOf(tile);
+  if (rmIdx !== -1) newHand.splice(rmIdx, 1);
 
   await update(ref(db, `rooms/${roomCode}/game`), {
     [`hands/${myPlayerId}`]: newHand,
@@ -893,6 +908,7 @@ async function fireDiscard() {
     flowerDrawPid: null,
   });
   selectedTileIdx = null;
+  lastDrawnTile = null;
 }
 
 async function firePong() {
@@ -1169,7 +1185,18 @@ function renderGameBoard() {
 
 function renderMyHand() {
   if (!gameState) return;
-  const hand    = sortTiles((gameState.hands    || {})[myPlayerId] || []);
+  const rawHand = (gameState.hands || {})[myPlayerId] || [];
+  // Separate the drawn tile from the rest for visual gap
+  let hand, drawnTileForDisplay = null;
+  if (lastDrawnTile && rawHand.includes(lastDrawnTile) && rawHand.length === 17 - 3 * ((gameState.melds || {})[myPlayerId] || []).length) {
+    const handCopy = [...rawHand];
+    const dIdx = handCopy.lastIndexOf(lastDrawnTile);
+    handCopy.splice(dIdx, 1);
+    hand = sortTiles(handCopy);
+    drawnTileForDisplay = lastDrawnTile;
+  } else {
+    hand = sortTiles(rawHand);
+  }
   const myMelds = ((gameState.melds    || {})[myPlayerId] || []);
   const myFlows = ((gameState.flowers  || {})[myPlayerId] || []);
 
@@ -1215,6 +1242,25 @@ function renderMyHand() {
     }
     tilesContainer.appendChild(wrapper);
   });
+
+  // Add drawn tile with spacer gap
+  if (drawnTileForDisplay) {
+    const spacer = document.createElement('div');
+    spacer.style.cssText = 'width:8px;flex-shrink:0;';
+    tilesContainer.appendChild(spacer);
+    const drawnIdx = hand.length; // index after all sorted tiles
+    const extra = drawnIdx === selectedTileIdx ? 'selected' : '';
+    const wrapper = document.createElement('div');
+    wrapper.style.cssText = 'display:flex;flex-direction:column;align-items:center;';
+    const tileEl = makeTileEl(drawnTileForDisplay, 'large', extra);
+    tileEl.addEventListener('click', () => {
+      selectedTileIdx = (selectedTileIdx === drawnIdx) ? null : drawnIdx;
+      renderMyHand();
+      updateActionButtons();
+    });
+    wrapper.appendChild(tileEl);
+    tilesContainer.appendChild(wrapper);
+  }
 
   const meldsContainer = el('hand-melds');
   while (meldsContainer.firstChild) meldsContainer.removeChild(meldsContainer.firstChild);
