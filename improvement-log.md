@@ -26,3 +26,4 @@
 - ui: game board visual overhaul — radial gradient bg, subtle pattern, enhanced center display, bigger labels, improved action buttons, golden accents
 - ui: fix center info alignment, avatar glow for active player, wider name labels, enhanced tile selection glow
 - fix: updateActionButtons crash when Firebase strips empty hands/melds objects (null guard)
+- ui: responsive layout for small phones — media queries for max-height 420px/340px, tested Samsung S21/iPhone SE/Pixel 5
