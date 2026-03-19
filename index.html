@@ -1772,7 +1772,10 @@ async function runBotTurn(gs, botPid) {
   try { await _runBotTurnInner(gs, botPid); } finally { botBusy[botPid] = false; }
 }
 async function _runBotTurnInner(gs, botPid) {
-  const { currentTurn, lastDiscard, hands, melds, flowers, wall, wallIndex } = gs;
+  const { currentTurn, lastDiscard, wall, wallIndex } = gs;
+  const hands = gs.hands || {};
+  const melds = gs.melds || {};
+  const flowers = gs.flowers || {};
   const botHand  = hands[botPid]  || [];
   const botMelds = melds[botPid]  || [];
   const lastTile = lastDiscard?.tile;
