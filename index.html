@@ -555,25 +555,25 @@ function _checkSets(sorted, count) {
   if (count === 0) return sorted.length === 0;
   if (sorted.length < 3) return false;
   const first = sorted[0];
-  const rest  = sorted.slice(1);
-  // Try pung
-  if (rest[0] === first && rest[1] === first) {
+  // Try pung (triplet)
+  if (sorted[1] === first && sorted[2] === first) {
     if (_checkSets(sorted.slice(3), count - 1)) return true;
   }
-  // Try sequence
+  // Try sequence (chow)
   const suit = first[1];
   if (suit !== 'z' && suit !== 'f') {
     const n = parseInt(first[0]);
     const t2 = `${n + 1}${suit}`, t3 = `${n + 2}${suit}`;
-    const i2 = rest.indexOf(t2), i3 = rest.indexOf(t3);
-    if (i2 !== -1 && i3 !== -1) {
-      const remaining = rest.filter((_, i) => i !== i2 && i !== (i3 > i2 ? i3 : i3));
-      // rebuild without first, t2, t3 properly
-      const copy = [...sorted];
-      copy.splice(copy.indexOf(first), 1);
-      copy.splice(copy.indexOf(t2), 1);
-      copy.splice(copy.indexOf(t3), 1);
-      if (_checkSets(copy, count - 1)) return true;
+    const copy = [...sorted];
+    copy.splice(0, 1); // remove first
+    const i2 = copy.indexOf(t2);
+    if (i2 !== -1) {
+      copy.splice(i2, 1);
+      const i3 = copy.indexOf(t3);
+      if (i3 !== -1) {
+        copy.splice(i3, 1);
+        if (_checkSets(copy, count - 1)) return true;
+      }
     }
   }
   return false;
@@ -1613,6 +1613,13 @@ async function _runBotTurnInner(gs, botPid) {
     return;
   }
 
+  // Check for 暗槓/加槓 before discarding
+  const kongOpts = getKongOptions(freshHand, null, freshMelds).filter(k => k.type !== '明槓');
+  if (kongOpts.length > 0) {
+    await botKong(botPid, kongOpts[0], fresh);
+    return;
+  }
+
   // Discard worst tile
   await botDiscard(botPid, freshHand, freshMelds, fresh);
 }
@@ -1697,6 +1704,33 @@ async function botPong(botPid, tile, hand, myMelds) {
   if (fresh2?.currentTurn === botPid) {
     await botDiscard(botPid, fresh2.hands[botPid] || [], fresh2.melds[botPid] || [], fresh2);
   }
+}
+
+async function botKong(botPid, kongOpt, gs) {
+  const tile = kongOpt.tile;
+  let hand = [...(gs.hands[botPid] || [])];
+  let melds = [...(gs.melds[botPid] || [])];
+  const removeCount = kongOpt.type === '暗槓' ? 4 : 1;
+  let removed = 0;
+  hand = hand.filter(t => (t === tile && removed < removeCount) ? (removed++, false) : true);
+  if (kongOpt.type === '暗槓') {
+    melds.push({ type: '暗槓', tiles: [tile, tile, tile, tile] });
+  } else {
+    const mIdx = melds.findIndex(m => m.type === '碰' && m.tiles[0] === tile);
+    if (mIdx !== -1) melds[mIdx] = { type: '加槓', tiles: [tile, tile, tile, tile] };
+  }
+  // Draw replacement
+  let wallIdx = gs.wallIndex;
+  const wall = gs.wall;
+  const flowers = [...(gs.flowers[botPid] || [])];
+  let drawn = wall[wallIdx++];
+  while (drawn && isFlower(drawn) && wallIdx < wall.length) { flowers.push(drawn); drawn = wall[wallIdx++]; }
+  if (drawn && !isFlower(drawn)) hand.push(drawn);
+  await update(ref(db, `rooms/${roomCode}/game`), {
+    [`hands/${botPid}`]: hand, [`melds/${botPid}`]: melds,
+    [`flowers/${botPid}`]: flowers, wallIndex: wallIdx,
+    currentTurn: botPid, lastDiscard: null, pendingAction: null, pendingKong: null,
+  });
 }
 
 async function botChow(botPid, tile, otherTwo, myMelds, gs) {
