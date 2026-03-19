@@ -1612,6 +1612,15 @@ function listenToGame() {
         console.log('[INTERVAL] bot stuck at own turn, forcing draw for ' + ct);
         stuckCounter = 0;
         await botDraw(ct, gameState);
+        // After draw, also check win and discard
+        await new Promise(r => setTimeout(r, 300));
+        const freshBot = (await get(ref(db, `rooms/${roomCode}/game`))).val();
+        if (freshBot && freshBot.currentTurn === ct && !freshBot.lastDiscard && freshBot.status !== 'won') {
+          const bh = (freshBot.hands || {})[ct] || [];
+          const bm = (freshBot.melds || {})[ct] || [];
+          if (canWin(bh, bm)) { await botDeclareWin(ct, true, freshBot); }
+          else { await botDiscard(ct, bh, bm, freshBot); }
+        }
       }
     } else {
       stuckCounter = 0;
@@ -2033,9 +2042,9 @@ async function _runBotTurnInner(gs, botPid) {
 }
 
 async function botDraw(botPid, gs) {
-  const wall  = gs.wall;
-  let idx     = gs.wallIndex;
-  if (idx >= wall.length) {
+  const wall  = gs.wall || [];
+  let idx     = gs.wallIndex || 0;
+  if (!wall.length || idx >= wall.length) {
     await update(ref(db, `rooms/${roomCode}/game`), {
       status: 'won', winner: null,
       winInfo: { tai: 0, breakdown: '流局（牌牆摸完）', isSelfDraw: false, hand: [], discarder: null },
