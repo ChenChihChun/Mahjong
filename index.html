@@ -1101,7 +1101,7 @@ function showWinScreen(winInfo, winnerPid) {
     const dealerInvolved = winnerIsDealer || loserIsDealer;
     let pay = 0;
     if (winInfo.isSelfDraw) pay = dealerInvolved ? basePayment * 2 : basePayment;
-    else if (isDiscarder)   pay = dealerInvolved ? basePayment * 3 : basePayment * 3;
+    else if (isDiscarder)   pay = basePayment * 3 * (dealerInvolved ? 2 : 1);
     scores[winnerPid] = (scores[winnerPid] || 0) + pay;
     scores[pid]       = (scores[pid] || 0) - pay;
   });
