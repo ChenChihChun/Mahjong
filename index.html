@@ -32,32 +32,41 @@ html, body { width: 100%; height: 100%; overflow: hidden; background: #1a4a1a; f
 .update-check-btn { font-size: 0.75rem; color: #aed6ae; background: none; border: 1px solid #4a6a4a; border-radius: 10px; padding: 3px 10px; cursor: pointer; }
 
 /* ===== LOBBY SCREEN ===== */
-#screen-lobby { background: radial-gradient(ellipse at center, #2d5a8a 0%, #0f1f3f 100%); padding: 20px; justify-content: flex-start; padding-top: 40px; }
-.lobby-code-box { text-align: center; margin-bottom: 24px; }
-.lobby-code-label { font-size: 0.9rem; color: #9ab; margin-bottom: 4px; }
-.lobby-code { font-size: 4rem; font-weight: 900; letter-spacing: 0.3em; color: #f5c518; text-shadow: 0 0 20px rgba(245,197,24,0.6); }
-.lobby-copy-btn { margin-top: 8px; padding: 8px 20px; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); border-radius: 20px; color: #fff; font-size: 0.85rem; cursor: pointer; }
-.lobby-players { width: 100%; max-width: 400px; margin-bottom: 20px; }
-.lobby-player-slot { display: flex; align-items: center; gap: 12px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); border-radius: 12px; padding: 12px 16px; margin-bottom: 8px; min-height: 70px; }
+#screen-lobby { background: radial-gradient(ellipse at center, #2d5a8a 0%, #0f1f3f 100%); padding: 10px; justify-content: center; }
+.lobby-layout { display: flex; gap: 16px; width: 100%; max-width: 900px; height: 100%; max-height: 100%; overflow: hidden; }
+.lobby-left { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; }
+.lobby-right { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 8px; overflow-y: auto; scrollbar-width: none; }
+.lobby-right::-webkit-scrollbar { display: none; }
+.lobby-code-box { text-align: center; margin-bottom: 12px; flex-shrink: 0; }
+.lobby-code-label { font-size: 0.8rem; color: #9ab; margin-bottom: 2px; }
+.lobby-code { font-size: min(8vmin, 3rem); font-weight: 900; letter-spacing: 0.3em; color: #f5c518; text-shadow: 0 0 20px rgba(245,197,24,0.6); }
+.lobby-copy-btn { margin-top: 4px; padding: 5px 14px; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); border-radius: 20px; color: #fff; font-size: 0.75rem; cursor: pointer; }
+.lobby-players { width: 100%; flex: 1; overflow-y: auto; scrollbar-width: none; }
+.lobby-players::-webkit-scrollbar { display: none; }
+.lobby-player-slot { display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); border-radius: 10px; padding: 8px 12px; margin-bottom: 6px; min-height: 48px; }
 .lobby-player-slot.empty { border-style: dashed; opacity: 0.5; }
-.lobby-player-avatar { width: 46px; height: 46px; border-radius: 50%; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; font-size: 1.6rem; flex-shrink: 0; }
+.lobby-player-avatar { width: 36px; height: 36px; border-radius: 50%; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; font-size: 1.3rem; flex-shrink: 0; }
 .lobby-player-info { flex: 1; }
-.lobby-player-name { font-weight: 700; font-size: 1rem; }
-.lobby-player-sub { font-size: 0.75rem; color: #9ab; margin-top: 2px; }
-.lobby-player-ready-dot { width: 10px; height: 10px; border-radius: 50%; background: #4a4; flex-shrink: 0; }
+.lobby-player-name { font-weight: 700; font-size: 0.85rem; }
+.lobby-player-sub { font-size: 0.65rem; color: #9ab; margin-top: 1px; }
+.lobby-player-ready-dot { width: 8px; height: 8px; border-radius: 50%; background: #4a4; flex-shrink: 0; }
 .lobby-player-ready-dot.not-ready { background: #a44; }
-.lobby-my-setup { width: 100%; max-width: 400px; background: rgba(255,255,255,0.08); border-radius: 12px; padding: 16px; margin-bottom: 16px; }
-.setup-label { font-size: 0.85rem; color: #9ab; margin-bottom: 8px; }
-.setup-name-input { width: 100%; padding: 10px 12px; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); border-radius: 8px; color: #fff; font-size: 1rem; outline: none; margin-bottom: 10px; }
+.lobby-my-setup { width: 100%; background: rgba(255,255,255,0.08); border-radius: 10px; padding: 10px 12px; }
+.setup-label { font-size: 0.75rem; color: #9ab; margin-bottom: 4px; }
+.setup-name-input { width: 100%; padding: 7px 10px; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); border-radius: 8px; color: #fff; font-size: 0.85rem; outline: none; margin-bottom: 6px; }
 .setup-name-input:focus { border-color: #f5c518; }
-.avatar-select-row { display: flex; gap: 10px; flex-wrap: wrap; }
-.avatar-opt { width: 50px; height: 50px; border-radius: 50%; border: 3px solid transparent; cursor: pointer; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; transition: border-color 0.2s; }
+.avatar-select-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.avatar-opt { width: 38px; height: 38px; border-radius: 50%; border: 3px solid transparent; cursor: pointer; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; font-size: 1.2rem; transition: border-color 0.2s; }
 .avatar-opt.selected { border-color: #f5c518; }
-.lobby-start-btn { width: 100%; max-width: 400px; padding: 16px; font-size: 1.2rem; font-weight: 700; background: linear-gradient(135deg, #f5c518, #e8a000); color: #1a1a1a; border: none; border-radius: 12px; cursor: pointer; opacity: 0.4; transition: opacity 0.3s; }
+.settings-grid { display: grid; grid-template-columns: auto 1fr auto 1fr; gap: 4px 8px; align-items: center; font-size: 0.75rem; color: #ccc; }
+.setup-sm-input { width: 100%; padding: 5px 6px; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); border-radius: 6px; color: #fff; font-size: 0.8rem; outline: none; text-align: center; }
+.setup-sm-input:focus { border-color: #f5c518; }
+.lobby-btn-row { display: flex; gap: 8px; }
+.lobby-start-btn { width: 100%; padding: 10px; font-size: 1rem; font-weight: 700; background: linear-gradient(135deg, #f5c518, #e8a000); color: #1a1a1a; border: none; border-radius: 10px; cursor: pointer; opacity: 0.4; transition: opacity 0.3s; }
 .lobby-start-btn.enabled { opacity: 1; }
-.lobby-ready-btn { width: 100%; max-width: 400px; padding: 16px; font-size: 1.1rem; font-weight: 700; background: linear-gradient(135deg, #2a8a2a, #1a6a1a); color: #fff; border: 2px solid #4aaa4a; border-radius: 12px; cursor: pointer; margin-bottom: 10px; }
-.lobby-back-btn { background: none; border: none; color: #9ab; font-size: 0.9rem; cursor: pointer; margin-top: 8px; }
-.lobby-bot-btn { width: 100%; max-width: 400px; padding: 12px; font-size: 1rem; font-weight: 700; background: linear-gradient(135deg, #5a4a8a, #3a2a6a); color: #fff; border: 2px solid #8a7aaa; border-radius: 12px; cursor: pointer; margin-bottom: 8px; }
+.lobby-ready-btn { flex: 1; padding: 10px; font-size: 0.9rem; font-weight: 700; background: linear-gradient(135deg, #2a8a2a, #1a6a1a); color: #fff; border: 2px solid #4aaa4a; border-radius: 10px; cursor: pointer; }
+.lobby-back-btn { background: none; border: none; color: #9ab; font-size: 0.8rem; cursor: pointer; margin-top: 4px; }
+.lobby-bot-btn { flex: 1; padding: 10px; font-size: 0.85rem; font-weight: 700; background: linear-gradient(135deg, #5a4a8a, #3a2a6a); color: #fff; border: 2px solid #8a7aaa; border-radius: 10px; cursor: pointer; }
 
 /* ===== RESPONSIVE TILE SIZE VARS (vmin = smaller of vw/vh; in landscape = screen height) ===== */
 :root {
@@ -264,27 +273,45 @@ html, body { width: 100%; height: 100%; overflow: hidden; background: #1a4a1a; f
 
 <!-- ===== LOBBY SCREEN ===== -->
 <div class="screen" id="screen-lobby">
-  <div class="lobby-code-box">
-    <div class="lobby-code-label">房間代碼</div>
-    <div class="lobby-code" id="lobby-code">----</div>
-    <button class="lobby-copy-btn" id="btn-copy-link">📋 複製邀請連結</button>
-  </div>
-  <div class="lobby-players" id="lobby-players"></div>
-  <div class="lobby-my-setup">
-    <div class="setup-label">我的暱稱</div>
-    <input class="setup-name-input" id="my-name-input" maxlength="10" placeholder="輸入暱稱…">
-    <div class="setup-label">選擇頭像</div>
-    <div class="avatar-select-row" id="avatar-select-row">
-      <div class="avatar-opt selected" data-avatar="0">🐲</div>
-      <div class="avatar-opt" data-avatar="1">🐯</div>
-      <div class="avatar-opt" data-avatar="2">🦊</div>
-      <div class="avatar-opt" data-avatar="3">🐼</div>
+  <div class="lobby-layout">
+    <div class="lobby-left">
+      <div class="lobby-code-box">
+        <div class="lobby-code-label">房間代碼</div>
+        <div class="lobby-code" id="lobby-code">----</div>
+        <button class="lobby-copy-btn" id="btn-copy-link">📋 複製邀請連結</button>
+      </div>
+      <div class="lobby-players" id="lobby-players"></div>
+    </div>
+    <div class="lobby-right">
+      <div class="lobby-my-setup">
+        <div class="setup-label">我的暱稱</div>
+        <input class="setup-name-input" id="my-name-input" maxlength="10" placeholder="輸入暱稱…">
+        <div class="setup-label">選擇頭像</div>
+        <div class="avatar-select-row" id="avatar-select-row">
+          <div class="avatar-opt selected" data-avatar="0">🐲</div>
+          <div class="avatar-opt" data-avatar="1">🐯</div>
+          <div class="avatar-opt" data-avatar="2">🦊</div>
+          <div class="avatar-opt" data-avatar="3">🐼</div>
+        </div>
+      </div>
+      <div class="lobby-my-setup" id="game-settings">
+        <div class="setup-label">遊戲設定（房主）</div>
+        <div class="settings-grid">
+          <label>初始金額</label><input class="setup-sm-input" id="set-money" type="number" value="1000" min="100" max="99999">
+          <label>底</label><input class="setup-sm-input" id="set-base" type="number" value="50" min="10" max="500">
+          <label>台</label><input class="setup-sm-input" id="set-tai" type="number" value="20" min="10" max="200">
+          <label>出牌秒數</label><input class="setup-sm-input" id="set-timer" type="number" value="15" min="0" max="60" placeholder="0=無限">
+          <label>碰牌秒數</label><input class="setup-sm-input" id="set-claim" type="number" value="5" min="1" max="30">
+        </div>
+      </div>
+      <div class="lobby-btn-row">
+        <button class="lobby-ready-btn" id="btn-ready">✅ 準備好了</button>
+        <button class="lobby-bot-btn" id="btn-add-bot" style="display:none">🤖 加入電腦</button>
+      </div>
+      <button class="lobby-start-btn" id="btn-start" style="display:none" disabled>🀄 開始遊戲</button>
+      <button class="lobby-back-btn" id="btn-back-home">← 返回</button>
     </div>
   </div>
-  <button class="lobby-ready-btn" id="btn-ready">✅ 準備好了</button>
-  <button class="lobby-bot-btn"  id="btn-add-bot" style="display:none">🤖 加入電腦測試</button>
-  <button class="lobby-start-btn" id="btn-start" style="display:none" disabled>🀄 開始遊戲</button>
-  <button class="lobby-back-btn" id="btn-back-home">← 返回</button>
 </div>
 
 <!-- ===== GAME SCREEN ===== -->
@@ -426,6 +453,7 @@ let scores = { p1:0, p2:0, p3:0, p4:0 };
 let pendingChowOptions = [];
 let nextDealer = 'p1';
 let nextRound  = 1;
+let roomSettings = { money: 1000, base: 50, tai: 20, timer: 15, claim: 5 };
 
 // ============================================================
 // DOM UTILS — safe, no innerHTML with user data
@@ -1154,7 +1182,9 @@ function showWinScreen(winInfo, winnerPid) {
 
   // Score update
   const prevScores = { ...scores };
-  const basePayment = Math.pow(2, Math.min(winInfo.tai, 8)) * 10;
+  const perTai = roomSettings.tai || 20;
+  const baseBet = roomSettings.base || 50;
+  const basePayment = baseBet + perTai * winInfo.tai;
   const winnerIsDealer = gameState?.dealer === winnerPid;
   PLAYER_IDS.forEach(pid => {
     if (pid === winnerPid) return;
@@ -1247,13 +1277,25 @@ function generateRoomCode() {
   return code;
 }
 
+function readSettings() {
+  return {
+    money: parseInt(el('set-money').value) || 1000,
+    base:  parseInt(el('set-base').value)  || 50,
+    tai:   parseInt(el('set-tai').value)   || 20,
+    timer: parseInt(el('set-timer').value) ?? 15,
+    claim: parseInt(el('set-claim').value) || 5,
+  };
+}
+
 async function createRoom() {
   roomCode   = generateRoomCode();
   myPlayerId = 'p1';
   isHost     = true;
+  roomSettings = readSettings();
   await set(ref(db, `rooms/${roomCode}`), {
     status: 'waiting',
     createdAt: Date.now(),
+    settings: roomSettings,
     players: { p1: { name: myName, avatarIdx: myAvatarIdx, ready: true, seat: 0 } },
   });
   enterLobby();
@@ -1281,8 +1323,9 @@ async function joinRoom(code) {
 function enterLobby() {
   txt('lobby-code', roomCode);
   el('btn-start').style.display   = isHost ? 'block' : 'none';
-  el('btn-ready').style.display   = isHost ? 'none'  : 'block';
-  el('btn-add-bot').style.display = isHost ? 'block' : 'none';
+  el('btn-ready').style.display   = isHost ? 'none'  : 'flex';
+  el('btn-add-bot').style.display = isHost ? 'flex' : 'none';
+  el('game-settings').style.display = isHost ? 'block' : 'none';
   el('btn-ready').disabled  = false;
   el('btn-ready').textContent = '✅ 準備好了';
   showScreen('screen-lobby');
@@ -1292,6 +1335,7 @@ function enterLobby() {
     if (!snap.exists()) return;
     const data = snap.val();
     roomPlayers = data.players || {};
+    if (data.settings) roomSettings = data.settings;
     renderLobbyPlayers(roomPlayers);
 
     const allReady = Object.keys(roomPlayers).length === 4 && Object.values(roomPlayers).every(p => p.ready);
@@ -1312,6 +1356,13 @@ function enterLobby() {
 // ============================================================
 async function beginGame(roomData) {
   roomPlayers = roomData.players || {};
+  if (roomData.settings) roomSettings = roomData.settings;
+  // Initialize scores with starting money (first game only)
+  if (!scores._initialized) {
+    const startMoney = roomSettings.money || 1000;
+    PLAYER_IDS.forEach(pid => { scores[pid] = startMoney; });
+    scores._initialized = true;
+  }
   // Re-detect which player slots are bots (needed when replaying)
   if (isHost) {
     botPlayerIds = PLAYER_IDS.filter(id => roomPlayers[id]?.isBot);
@@ -1398,17 +1449,17 @@ function listenToGame() {
         const hasAction = canPong(myHand, lastTile)
                        || canChow(myHand, lastTile, lastDiscard.by).length > 0
                        || canWin([...myHand, lastTile], myMelds);
+        const claimSecs = roomSettings.claim || 5;
         if (hasAction) {
-          startActionTimer(8, () => fireSkip());
+          startActionTimer(claimSecs, () => fireSkip());
         } else {
           stopActionTimer();
-          // Fallback: clear after 9s (longer than C/D's 8s claim window) so game never gets stuck
-          setTimeout(() => { if (stillValid()) fireSkip(); }, 9000);
+          setTimeout(() => { if (stillValid()) fireSkip(); }, (claimSecs + 2) * 1000);
         }
       } else {
         // C or D: can pong or win only
         const hasAction = canPong(myHand, lastTile) || canWin([...myHand, lastTile], myMelds);
-        if (hasAction) startActionTimer(8, () => fireSkip());
+        if (hasAction) startActionTimer(roomSettings.claim || 5, () => fireSkip());
         else stopActionTimer();
       }
     } else if (gameState.pendingKong && gameState.pendingKong.by !== myPlayerId) {
@@ -1436,8 +1487,9 @@ function listenToGame() {
           if (hLen < 17 - 3 * mLen) fireDraw();
         }, 400);
       } else {
-        // Hand is full — player must discard. Start 15s auto-discard timer.
-        startActionTimer(15, () => {
+        // Hand is full — player must discard.
+        const discardSecs = roomSettings.timer || 15;
+        if (discardSecs > 0) startActionTimer(discardSecs, () => {
           if (!gameState || gameState.currentTurn !== myPlayerId || gameState.lastDiscard) return;
           const hand = sortTiles(gameState.hands[myPlayerId] || []);
           if (hand.length === 0) return;
@@ -1508,7 +1560,8 @@ el('btn-ready').addEventListener('click', async () => {
 
 el('btn-start').addEventListener('click', async () => {
   if (Object.keys(roomPlayers).length < 4) { showToast('需要4位玩家才能開始'); return; }
-  await update(ref(db, `rooms/${roomCode}`), { status: 'playing' });
+  roomSettings = readSettings();
+  await update(ref(db, `rooms/${roomCode}`), { status: 'playing', settings: roomSettings });
 });
 
 el('btn-discard').addEventListener('click', () => fireDiscard());

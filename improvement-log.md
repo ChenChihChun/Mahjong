@@ -27,3 +27,4 @@
 - ui: fix center info alignment, avatar glow for active player, wider name labels, enhanced tile selection glow
 - fix: updateActionButtons crash when Firebase strips empty hands/melds objects (null guard)
 - ui: responsive layout for small phones — media queries for max-height 420px/340px, tested Samsung S21/iPhone SE/Pixel 5
+- feat: lobby redesign — landscape 2-column layout, game settings (金額/底/台/出牌秒/碰牌秒), settings stored in Firebase and used in gameplay
