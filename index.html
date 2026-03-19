@@ -743,7 +743,16 @@ async function fireDraw() {
   const flowers = [...(gameState.flowers[myPlayerId] || [])];
   let tile = wall[idx++];
   while (isFlower(tile) && idx < wall.length) { flowers.push(tile); tile = wall[idx++]; }
-  if (isFlower(tile)) { showToast('無法摸牌'); return; }
+  if (isFlower(tile)) {
+    // All remaining tiles are flowers — declare draw
+    flowers.push(tile);
+    await update(ref(db, `rooms/${roomCode}/game`), {
+      [`flowers/${myPlayerId}`]: flowers, wallIndex: idx,
+      status: 'won', winner: null,
+      winInfo: { tai: 0, breakdown: '流局（牌牆摸完）', isSelfDraw: false, hand: [], discarder: null },
+    });
+    return;
+  }
   hand.push(tile);
 
   await update(ref(db, `rooms/${roomCode}/game`), {
@@ -1675,7 +1684,15 @@ async function botDraw(botPid, gs) {
   const flowers = [...(gs.flowers[botPid] || [])];
   let tile = wall[idx++];
   while (isFlower(tile) && idx < wall.length) { flowers.push(tile); tile = wall[idx++]; }
-  if (isFlower(tile)) return;
+  if (isFlower(tile)) {
+    flowers.push(tile);
+    await update(ref(db, `rooms/${roomCode}/game`), {
+      [`flowers/${botPid}`]: flowers, wallIndex: idx,
+      status: 'won', winner: null,
+      winInfo: { tai: 0, breakdown: '流局（牌牆摸完）', isSelfDraw: false, hand: [], discarder: null },
+    });
+    return;
+  }
   hand.push(tile);
   await update(ref(db, `rooms/${roomCode}/game`), {
     [`hands/${botPid}`]: hand,

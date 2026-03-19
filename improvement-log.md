@@ -18,3 +18,4 @@
 - feat: 暗槓 bonus scoring +1台 each in calcTai
 - feat: win screen now shows score changes for all players after each game
 - feat: show dealer marker (莊) on avatar name and display player's seat wind in center
+- fix: all-flowers-remaining in wall now correctly declares 流局 instead of freezing the game
