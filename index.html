@@ -1111,6 +1111,15 @@ function showWinScreen(winInfo, winnerPid) {
     scores[pid]       = (scores[pid] || 0) - pay;
   });
 
+  // Display score changes
+  el('win-breakdown').style.whiteSpace = 'pre-line';
+  let scoreLines = '\n';
+  PLAYER_IDS.forEach(pid => {
+    const name = roomPlayers[pid]?.name || pid;
+    scoreLines += `${name}：${scores[pid] >= 0 ? '+' : ''}${scores[pid]}分\n`;
+  });
+  el('win-breakdown').textContent = (winInfo.breakdown || '') + scoreLines;
+
   // 連莊: dealer stays if they won or draw; otherwise rotate
   const curDealer = gameState?.dealer || 'p1';
   const curRound  = gameState?.round || 1;
