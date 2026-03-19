@@ -2177,6 +2177,7 @@ async function botPong(botPid, tile, hand, myMelds) {
     lastDiscard: null,
     pendingAction: null,
   });
+  showNotif(`${(roomPlayers[botPid]||{}).name||botPid} 碰！`);
   // Then discard
   await new Promise(r => setTimeout(r, 400));
   const fresh2 = (await get(ref(db, `rooms/${roomCode}/game`))).val();
@@ -2231,6 +2232,7 @@ async function botChow(botPid, tile, otherTwo, myMelds, gs) {
     [`discards/${lastBy}`]: discarderPile,
     currentTurn: botPid, lastDiscard: null, pendingAction: null,
   });
+  showNotif(`${(roomPlayers[botPid]||{}).name||botPid} 吃！`);
   await new Promise(r => setTimeout(r, 400));
   const fresh2 = (await get(ref(db, `rooms/${roomCode}/game`))).val();
   if (fresh2?.currentTurn === botPid) {
