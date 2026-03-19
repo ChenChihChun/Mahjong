@@ -1205,6 +1205,8 @@ function renderGameBoard() {
   if (currentTurn === myPlayerId) {
     turnEl.textContent = '輪到你了';
     turnEl.style.opacity = '1';
+    // Vibrate on mobile when it's your turn
+    try { navigator.vibrate?.(100); } catch(e) {}
   } else {
     const turnName = (roomPlayers[currentTurn] || {}).name || currentTurn;
     turnEl.textContent = `等待 ${turnName}`;
