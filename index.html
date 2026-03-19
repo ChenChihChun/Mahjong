@@ -1521,8 +1521,16 @@ async function botDiscard(botPid, hand, myMelds, gs) {
   // Simple strategy: discard the tile that is most isolated (fewest neighbours)
   const sorted = sortTiles(hand);
   const score  = t => {
-    if (t[1] === 'z' || t[1] === 'f') return 0; // honour/flower = low value
-    const n = parseInt(t[0]), s = t[1];
+    if (t[0] === 'f') return 0; // flowers shouldn't be in hand
+    const suit = t[1];
+    if (suit === 'z') {
+      // Honor tiles: value based on duplicates (pairs/triplets are valuable)
+      const cnt = sorted.filter(x => x === t).length;
+      if (cnt >= 3) return 5; // triplet = very valuable (guarantees tai for dragons)
+      if (cnt >= 2) return 3; // pair = valuable
+      return 0; // isolated honor = safe discard
+    }
+    const n = parseInt(t[0]), s = suit;
     let val = 0;
     [`${n-1}${s}`,`${n+1}${s}`,`${n-2}${s}`,`${n+2}${s}`].forEach(nb => {
       if (sorted.includes(nb)) val++;
