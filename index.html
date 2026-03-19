@@ -670,6 +670,11 @@ function calcTai(hand, melds, flowers, isSelfDraw, isDealer, wallRemaining, isFi
     }
   }
 
+  // 暗槓 bonus (+1台 each)
+  (melds || []).forEach(m => {
+    if (m.type === '暗槓') { tai++; breakdown.push(`暗槓(${tileLabel(m.tiles[0])}) +1台`); }
+  });
+
   // 碰碰胡 (all pungs/kongs, no sequences)
   const allMelds = melds || [];
   if (allMelds.every(m => m.type !== '吃')) {

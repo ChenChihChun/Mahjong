@@ -15,3 +15,4 @@
 - feat: calcTai add 門風 (seat wind) and 圈風 (round wind) triplet scoring +1台 each
 - fix: claimed tiles (pong/chow) now removed from discarder's pile in all 4 claim functions
 - fix: discard win scoring now correctly doubles when dealer is involved (was ignoring dealerInvolved)
+- feat: 暗槓 bonus scoring +1台 each in calcTai
