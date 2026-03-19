@@ -1295,9 +1295,9 @@ function listenToGame() {
     // Auto-draw when it's my turn and no pending discard/kong
     if (isMyTurn && !lastDiscard && !gameState.pendingKong) {
       const myHandNow = gameState.hands[myPlayerId] || [];
-      // Only auto-draw if hand is short (haven't drawn yet this turn)
       const expectedLen = 17 - 3 * (gameState.melds[myPlayerId]||[]).length;
       if (myHandNow.length < expectedLen) {
+        // Hand is short — auto-draw
         setTimeout(() => {
           if (gameState?.currentTurn !== myPlayerId || gameState?.lastDiscard) return;
           const gs = gameState;
@@ -1305,6 +1305,15 @@ function listenToGame() {
           const mLen = (gs.melds[myPlayerId] || []).length;
           if (hLen < 17 - 3 * mLen) fireDraw();
         }, 400);
+      } else {
+        // Hand is full — player must discard. Start 15s auto-discard timer.
+        startActionTimer(15, () => {
+          if (!gameState || gameState.currentTurn !== myPlayerId || gameState.lastDiscard) return;
+          const hand = sortTiles(gameState.hands[myPlayerId] || []);
+          if (hand.length === 0) return;
+          selectedTileIdx = hand.length - 1; // discard last tile (drawn tile)
+          fireDiscard();
+        });
       }
     }
   });
