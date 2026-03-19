@@ -1109,6 +1109,7 @@ function showWinScreen(winInfo, winnerPid) {
   (winInfo.hand || []).forEach(t => handEl.appendChild(makeTileEl(t, 'medium')));
 
   // Score update
+  const prevScores = { ...scores };
   const basePayment = Math.pow(2, Math.min(winInfo.tai, 8)) * 10;
   const winnerIsDealer = gameState?.dealer === winnerPid;
   PLAYER_IDS.forEach(pid => {
@@ -1128,7 +1129,9 @@ function showWinScreen(winInfo, winnerPid) {
   let scoreLines = '\n';
   PLAYER_IDS.forEach(pid => {
     const name = roomPlayers[pid]?.name || pid;
-    scoreLines += `${name}：${scores[pid] >= 0 ? '+' : ''}${scores[pid]}分\n`;
+    const diff = scores[pid] - (prevScores[pid] || 0);
+    const diffStr = diff >= 0 ? `+${diff}` : `${diff}`;
+    scoreLines += `${name}：${diffStr} → 累計 ${scores[pid]}分\n`;
   });
   el('win-breakdown').textContent = (winInfo.breakdown || '') + scoreLines;
 
