@@ -617,7 +617,7 @@ function getKongOptions(hand, tile, melds) {
 // ============================================================
 // TAI CALCULATION
 // ============================================================
-function calcTai(hand, melds, flowers, isSelfDraw, isDealer, wallRemaining, isFirstDraw) {
+function calcTai(hand, melds, flowers, isSelfDraw, isDealer, wallRemaining, isFirstDraw, seatIdx) {
   if (isFirstDraw && isSelfDraw) {
     const label = isDealer ? '天胡' : '地胡';
     return { tai: isDealer ? 16 : 8, breakdown: [label] };
@@ -650,6 +650,21 @@ function calcTai(hand, melds, flowers, isSelfDraw, isDealer, wallRemaining, isFi
   const wPair = wc.filter(c => c === 2).length;
   if (wTrip === 4)              { tai += 8; breakdown.push('大四喜 +8台'); }
   else if (wTrip === 3 && wPair === 1) { tai += 5; breakdown.push('小四喜 +5台'); }
+
+  // Flower scoring (花牌)
+  // 正花: f1-f4 (梅蘭菊竹) & f5-f8 (春夏秋冬) map to seats 0-3
+  if (typeof seatIdx === 'number' && flowers && flowers.length > 0) {
+    const matchF1 = `f${seatIdx + 1}`;  // 梅蘭菊竹
+    const matchF2 = `f${seatIdx + 5}`;  // 春夏秋冬
+    if (flowers.includes(matchF1)) { tai++; breakdown.push(`正花(${FLOWER_LABELS[seatIdx + 1]}) +1台`); }
+    if (flowers.includes(matchF2)) { tai++; breakdown.push(`正花(${FLOWER_LABELS[seatIdx + 5]}) +1台`); }
+    // 花槓: collecting all 4 of a group
+    const hasAllPlant = ['f1','f2','f3','f4'].every(f => flowers.includes(f));
+    const hasAllSeason = ['f5','f6','f7','f8'].every(f => flowers.includes(f));
+    if (hasAllPlant)  { tai += 2; breakdown.push('花槓(梅蘭菊竹) +2台'); }
+    if (hasAllSeason) { tai += 2; breakdown.push('花槓(春夏秋冬) +2台'); }
+    if (hasAllPlant && hasAllSeason) { tai += 8; breakdown.push('八仙過海 +8台'); }
+  }
 
   if (tai === 0) breakdown.push('平胡 0台');
   return { tai, breakdown };
@@ -819,7 +834,8 @@ async function fireDeclareWin() {
 
   const wallLeft = gameState.wall.length - (gameState.wallIndex || 0);
   const isDealer = gameState.dealer === myPlayerId;
-  const { tai, breakdown } = calcTai(fullHand, myMelds, myFlows, isSelfDraw, isDealer, wallLeft, false);
+  const seatIdx  = PLAYER_IDS.indexOf(myPlayerId);
+  const { tai, breakdown } = calcTai(fullHand, myMelds, myFlows, isSelfDraw, isDealer, wallLeft, false, seatIdx);
   // In Taiwan mahjong, 平胡 (0 tai) is still valid — no minimum requirement enforced
 
   await update(ref(db, `rooms/${roomCode}/game`), {
@@ -1550,7 +1566,8 @@ async function botDeclareWin(botPid, isSelfDraw, gs) {
 
   const wallLeft = (gs.wall || []).length - (gs.wallIndex || 0);
   const isDealer = gs.dealer === botPid;
-  const { tai, breakdown } = calcTai(fullHand, myMelds, myFlows, isSelfDraw, isDealer, wallLeft, false);
+  const seatIdx  = PLAYER_IDS.indexOf(botPid);
+  const { tai, breakdown } = calcTai(fullHand, myMelds, myFlows, isSelfDraw, isDealer, wallLeft, false, seatIdx);
   await update(ref(db, `rooms/${roomCode}/game`), {
     status: 'won',
     winner: botPid,
