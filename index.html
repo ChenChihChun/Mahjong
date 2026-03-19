@@ -835,9 +835,9 @@ function nextPlayer(pid) {
 // ============================================================
 async function fireDraw() {
   if (!gameState) return;
-  const wall = gameState.wall;
-  let idx    = gameState.wallIndex;
-  if (idx >= wall.length) {
+  const wall = gameState.wall || [];
+  let idx    = gameState.wallIndex || 0;
+  if (!wall.length || idx >= wall.length) {
     // Wall exhausted — declare draw (流局)
     await update(ref(db, `rooms/${roomCode}/game`), {
       status: 'won',
