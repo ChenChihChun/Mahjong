@@ -478,7 +478,7 @@ let selectedTileIdx = null;
 let actionTimerInterval = null;
 let scores = { p1:0, p2:0, p3:0, p4:0 };
 let pendingChowOptions = [];
-let nextDealer = 'p1';
+let nextDealer = PLAYER_IDS[Math.floor(Math.random() * 4)]; // Random first dealer
 let nextRound  = 1;
 let roomSettings = { money: 1000, base: 50, tai: 20, timer: 15, claim: 5 };
 
@@ -1557,7 +1557,8 @@ function listenToGame() {
           startActionTimer(claimSecs, () => fireSkip());
         } else {
           stopActionTimer();
-          setTimeout(() => { if (stillValid()) fireSkip(); }, (claimSecs + 2) * 1000);
+          // No action available — clear quickly (wait briefly for other players' claims)
+          setTimeout(() => { if (stillValid()) fireSkip(); }, 1500);
         }
       } else {
         // C or D: can pong or win only
@@ -1844,6 +1845,22 @@ async function _runBotTurnInner(gs, botPid) {
     // 4. If this bot is the "next player" (currentTurn), it must clear lastDiscard so game proceeds
     if (isNextPlayer) {
       await update(ref(db, `rooms/${roomCode}/game`), { lastDiscard: null, pendingAction: null });
+      // IMPORTANT: Don't return — fall through to own-turn logic below.
+      // Firebase listener fires synchronously during update(), but botBusy is still true,
+      // so the re-triggered runBotTurn would be skipped. We must handle own turn here.
+      await new Promise(r => setTimeout(r, 300));
+      const freshAfterClear = (await get(ref(db, `rooms/${roomCode}/game`))).val();
+      if (!freshAfterClear || freshAfterClear.currentTurn !== botPid || freshAfterClear.lastDiscard || freshAfterClear.status === 'won') return;
+      // Continue to own-turn logic with fresh state
+      const freshHand2 = freshAfterClear.hands[botPid] || [];
+      const freshMelds2 = freshAfterClear.melds[botPid] || [];
+      const expectedLen2 = 17 - 3 * freshMelds2.length;
+      if (freshHand2.length < expectedLen2) { await botDraw(botPid, freshAfterClear); return; }
+      if (canWin(freshHand2, freshMelds2)) { await botDeclareWin(botPid, true, freshAfterClear); return; }
+      const kongOpts2 = getKongOptions(freshHand2, null, freshMelds2).filter(k => k.type !== '明槓');
+      if (kongOpts2.length > 0) { await botKong(botPid, kongOpts2[0], freshAfterClear); return; }
+      await botDiscard(botPid, freshHand2, freshMelds2, freshAfterClear);
+      return;
     }
     // Other bots (not currentTurn) just pass silently — the next player will clear lastDiscard
     return;
