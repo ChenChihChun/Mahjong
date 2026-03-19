@@ -1200,8 +1200,16 @@ function renderGameBoard() {
 
   renderMyHand();
 
-  // Turn indicator
-  el('turn-indicator').style.opacity = currentTurn === myPlayerId ? '1' : '0';
+  // Turn indicator — show whose turn it is
+  const turnEl = el('turn-indicator');
+  if (currentTurn === myPlayerId) {
+    turnEl.textContent = '輪到你了';
+    turnEl.style.opacity = '1';
+  } else {
+    const turnName = (roomPlayers[currentTurn] || {}).name || currentTurn;
+    turnEl.textContent = `等待 ${turnName}`;
+    turnEl.style.opacity = '0.6';
+  }
   updateActionButtons();
 }
 
