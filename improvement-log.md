@@ -13,3 +13,4 @@
 - feat: 連莊 — dealer stays when they win or draw; rotates to next player otherwise; round number advances
 - fix: clean up _checkSets dead code; add bot kong logic (暗槓/加槓) and botKong function
 - feat: calcTai add 門風 (seat wind) and 圈風 (round wind) triplet scoring +1台 each
+- fix: claimed tiles (pong/chow) now removed from discarder's pile in all 4 claim functions

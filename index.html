@@ -767,14 +767,18 @@ async function fireDiscard() {
 
 async function firePong() {
   const tile = gameState?.lastDiscard?.tile;
+  const lastBy = gameState?.lastDiscard?.by;
   if (!tile) return;
   const hand = [...(gameState.hands[myPlayerId] || [])];
   let removed = 0;
   const newHand = hand.filter(t => (t === tile && removed < 2) ? (removed++, false) : true);
   const myMelds = [...(gameState.melds[myPlayerId] || []), { type:'碰', tiles:[tile,tile,tile] }];
+  const discarderPile = [...(gameState.discards[lastBy] || [])];
+  discarderPile.pop(); // remove claimed tile
   await update(ref(db, `rooms/${roomCode}/game`), {
     [`hands/${myPlayerId}`]: newHand,
     [`melds/${myPlayerId}`]: myMelds,
+    [`discards/${lastBy}`]: discarderPile,
     currentTurn: myPlayerId,
     lastDiscard: null,
     pendingAction: null,
@@ -784,6 +788,7 @@ async function firePong() {
 
 async function fireChow(otherTwo) {
   const tile = gameState?.lastDiscard?.tile;
+  const lastBy = gameState?.lastDiscard?.by;
   if (!tile) return;
   const hand = [...(gameState.hands[myPlayerId] || [])];
   let removals = [...otherTwo];
@@ -794,9 +799,12 @@ async function fireChow(otherTwo) {
   });
   const meldTiles = sortTiles([tile, ...otherTwo]);
   const myMelds = [...(gameState.melds[myPlayerId] || []), { type:'吃', tiles: meldTiles }];
+  const discarderPile = [...(gameState.discards[lastBy] || [])];
+  discarderPile.pop();
   await update(ref(db, `rooms/${roomCode}/game`), {
     [`hands/${myPlayerId}`]: newHand,
     [`melds/${myPlayerId}`]: myMelds,
+    [`discards/${lastBy}`]: discarderPile,
     currentTurn: myPlayerId,
     lastDiscard: null,
     pendingAction: null,
@@ -1703,9 +1711,12 @@ async function botPong(botPid, tile, hand, myMelds) {
   const filtered = newHand.filter(t => (t === tile && removed < 2) ? (removed++, false) : true);
   const newMelds  = [...myMelds, { type: '碰', tiles: [tile, tile, tile] }];
   const gs = (await get(ref(db, `rooms/${roomCode}/game`))).val();
+  const discarderPile = [...(gs.discards[gs.lastDiscard?.by] || [])];
+  discarderPile.pop();
   await update(ref(db, `rooms/${roomCode}/game`), {
     [`hands/${botPid}`]: filtered,
     [`melds/${botPid}`]: newMelds,
+    [`discards/${gs.lastDiscard?.by}`]: discarderPile,
     currentTurn: botPid,
     lastDiscard: null,
     pendingAction: null,
@@ -1755,8 +1766,12 @@ async function botChow(botPid, tile, otherTwo, myMelds, gs) {
   });
   const meldTiles = sortTiles([tile, ...otherTwo]);
   const newMelds = [...myMelds, { type: '吃', tiles: meldTiles }];
+  const lastBy = gs.lastDiscard?.by;
+  const discarderPile = [...(gs.discards[lastBy] || [])];
+  discarderPile.pop();
   await update(ref(db, `rooms/${roomCode}/game`), {
     [`hands/${botPid}`]: filtered, [`melds/${botPid}`]: newMelds,
+    [`discards/${lastBy}`]: discarderPile,
     currentTurn: botPid, lastDiscard: null, pendingAction: null,
   });
   await new Promise(r => setTimeout(r, 700));
