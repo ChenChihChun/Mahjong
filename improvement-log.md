@@ -39,3 +39,7 @@
 - fix: CRITICAL — bot stuck after clearing lastDiscard (botBusy race condition + null guards)
 - fix: comprehensive null guards for ALL Firebase accesses (gs.hands/melds/flowers/discards/wall)
 - fix: random first dealer, faster skip fallback (1.5s vs 7s)
+- fix: claim timer restart bug (same discard key dedup)
+- fix: auto-draw dedup flag
+- fix: stuck game detector interval — forces bot progress after 20s
+- VERIFIED: full game cycle working with Playwright — bots draw/discard/claim correctly
