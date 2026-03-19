@@ -1528,18 +1528,40 @@ let autoDrawInterval = null;
 function listenToGame() {
   // Reliable auto-draw fallback — checks every 2s if we need to draw
   clearInterval(autoDrawInterval);
+  let stuckCounter = 0;
+  let lastSeenTurn = null;
   autoDrawInterval = setInterval(async () => {
-    if (!gameState || gameState.status === 'won') return;
+    if (!gameState || gameState.status === 'won') { stuckCounter = 0; return; }
     const ct = gameState.currentTurn;
     const ld = gameState.lastDiscard;
-    const pk = gameState.pendingKong;
+
+    // Detect stuck game: if same turn for too long, force progress
+    if (ct === lastSeenTurn) {
+      stuckCounter++;
+      // If stuck for 10+ intervals (20s) and it's a bot's turn with lastDiscard, force clear
+      if (stuckCounter >= 10 && ct !== myPlayerId && ld && isHost) {
+        console.log('[INTERVAL] game stuck, forcing clear for ' + ct);
+        stuckCounter = 0;
+        await update(ref(db, `rooms/${roomCode}/game`), { lastDiscard: null, pendingAction: null });
+      }
+      // If stuck for 10+ and it's a bot's turn without lastDiscard, force bot draw+discard
+      if (stuckCounter >= 10 && ct !== myPlayerId && !ld && isHost) {
+        console.log('[INTERVAL] bot stuck at own turn, forcing draw for ' + ct);
+        stuckCounter = 0;
+        await botDraw(ct, gameState);
+      }
+    } else {
+      stuckCounter = 0;
+      lastSeenTurn = ct;
+    }
+
+    // Auto-draw for human player
     if (ct !== myPlayerId) return;
-    if (ld || pk) { console.log('[INTERVAL] waiting: ld=' + !!ld + ' pk=' + !!pk); return; }
+    if (ld || gameState.pendingKong) return;
     const h = ((gameState.hands || {})[myPlayerId] || []);
     const m = ((gameState.melds || {})[myPlayerId] || []);
     const expected = 17 - 3 * m.length;
     if (h.length < expected) {
-      console.log('[INTERVAL] drawing, hand=' + h.length + ' expected=' + expected);
       try { await fireDraw(); } catch(e) { console.error('[INTERVAL] draw failed:', e); }
     }
   }, 2000);
