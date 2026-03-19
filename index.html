@@ -862,7 +862,7 @@ async function fireDraw() {
     return;
   }
   hand.push(tile);
-  const hadFlowerDraw = flowers.length > (gameState.flowers[myPlayerId] || []).length;
+  const hadFlowerDraw = flowers.length > ((gameState.flowers || {})[myPlayerId] || []).length;
 
   await update(ref(db, `rooms/${roomCode}/game`), {
     [`hands/${myPlayerId}`]: hand,
@@ -966,7 +966,7 @@ async function fireKong(kongOpt) {
 
   let wallIdx = gameState.wallIndex;
   const wall  = gameState.wall;
-  const flowers = [...(gameState.flowers[myPlayerId] || [])];
+  const flowers = [...((gameState.flowers || {})[myPlayerId] || [])];
   let drawn = wall[wallIdx++];
   while (drawn && isFlower(drawn) && wallIdx < wall.length) { flowers.push(drawn); drawn = wall[wallIdx++]; }
   if (drawn && !isFlower(drawn)) hand.push(drawn);
@@ -981,8 +981,8 @@ async function fireKong(kongOpt) {
 }
 
 async function completeKong(pid, tile, gs) {
-  const hand = [...(gs.hands[pid] || [])];
-  const melds = [...(gs.melds[pid] || [])];
+  const hand = [...((gs.hands || {})[pid] || [])];
+  const melds = [...((gs.melds || {})[pid] || [])];
   const rmIdx = hand.indexOf(tile);
   if (rmIdx !== -1) hand.splice(rmIdx, 1);
   const mIdx = melds.findIndex(m => m.type === '碰' && m.tiles[0] === tile);
@@ -990,7 +990,7 @@ async function completeKong(pid, tile, gs) {
 
   let wallIdx = gs.wallIndex;
   const wall  = gs.wall;
-  const flowers = [...(gs.flowers[pid] || [])];
+  const flowers = [...((gs.flowers || {})[pid] || [])];
   let drawn = wall[wallIdx++];
   while (drawn && isFlower(drawn) && wallIdx < wall.length) { flowers.push(drawn); drawn = wall[wallIdx++]; }
   if (drawn && !isFlower(drawn)) hand.push(drawn);
@@ -1595,7 +1595,7 @@ function listenToGame() {
         const discardSecs = roomSettings.timer || 15;
         if (discardSecs > 0) startActionTimer(discardSecs, () => {
           if (!gameState || gameState.currentTurn !== myPlayerId || gameState.lastDiscard) return;
-          const hand = sortTiles(gameState.hands[myPlayerId] || []);
+          const hand = sortTiles((gameState.hands || {})[myPlayerId] || []);
           if (hand.length === 0) return;
           selectedTileIdx = hand.length - 1; // discard last tile (drawn tile)
           fireDiscard();
@@ -1855,8 +1855,8 @@ async function _runBotTurnInner(gs, botPid) {
       const freshAfterClear = (await get(ref(db, `rooms/${roomCode}/game`))).val();
       if (!freshAfterClear || freshAfterClear.currentTurn !== botPid || freshAfterClear.lastDiscard || freshAfterClear.status === 'won') return;
       // Continue to own-turn logic with fresh state
-      const freshHand2 = freshAfterClear.hands[botPid] || [];
-      const freshMelds2 = freshAfterClear.melds[botPid] || [];
+      const freshHand2 = (freshAfterClear.hands || {})[botPid] || [];
+      const freshMelds2 = (freshAfterClear.melds || {})[botPid] || [];
       const expectedLen2 = 17 - 3 * freshMelds2.length;
       if (freshHand2.length < expectedLen2) { await botDraw(botPid, freshAfterClear); return; }
       if (canWin(freshHand2, freshMelds2)) { await botDeclareWin(botPid, true, freshAfterClear); return; }
@@ -1876,8 +1876,8 @@ async function _runBotTurnInner(gs, botPid) {
   const fresh = (await get(ref(db, `rooms/${roomCode}/game`))).val();
   if (!fresh || fresh.currentTurn !== botPid || fresh.lastDiscard) return;
 
-  const freshHand = fresh.hands[botPid] || [];
-  const freshMelds = fresh.melds[botPid] || [];
+  const freshHand = (fresh.hands || {})[botPid] || [];
+  const freshMelds = (fresh.melds || {})[botPid] || [];
   const expectedLen = 17 - 3 * freshMelds.length;
 
   // Need to draw?
@@ -1913,8 +1913,8 @@ async function botDraw(botPid, gs) {
     });
     return;
   }
-  const hand    = [...(gs.hands[botPid] || [])];
-  const flowers = [...(gs.flowers[botPid] || [])];
+  const hand    = [...((gs.hands || {})[botPid] || [])];
+  const flowers = [...((gs.flowers || {})[botPid] || [])];
   let tile = wall[idx++];
   while (isFlower(tile) && idx < wall.length) { flowers.push(tile); tile = wall[idx++]; }
   if (isFlower(tile)) {
@@ -1927,7 +1927,7 @@ async function botDraw(botPid, gs) {
     return;
   }
   hand.push(tile);
-  const hadFlowerDraw = flowers.length > (gs.flowers[botPid] || []).length;
+  const hadFlowerDraw = flowers.length > ((gs.flowers || {})[botPid] || []).length;
   await update(ref(db, `rooms/${roomCode}/game`), {
     [`hands/${botPid}`]: hand,
     [`flowers/${botPid}`]: flowers,
@@ -1981,7 +1981,7 @@ async function botDiscard(botPid, hand, myMelds, gs) {
 
   await update(ref(db, `rooms/${roomCode}/game`), {
     [`hands/${botPid}`]: newHand,
-    [`discards/${botPid}`]: [...(gs.discards[botPid] || []), worst],
+    [`discards/${botPid}`]: [...((gs.discards || {})[botPid] || []), worst],
     lastDiscard: { tile: worst, by: botPid },
     currentTurn: nextPlayer(botPid),
     pendingAction: null,
@@ -1996,7 +1996,7 @@ async function botPong(botPid, tile, hand, myMelds) {
   const filtered = newHand.filter(t => (t === tile && removed < 2) ? (removed++, false) : true);
   const newMelds  = [...myMelds, { type: '碰', tiles: [tile, tile, tile] }];
   const gs = (await get(ref(db, `rooms/${roomCode}/game`))).val();
-  const discarderPile = [...(gs.discards[gs.lastDiscard?.by] || [])];
+  const discarderPile = [...((gs.discards || {})[gs.lastDiscard?.by] || [])];
   discarderPile.pop();
   await update(ref(db, `rooms/${roomCode}/game`), {
     [`hands/${botPid}`]: filtered,
@@ -2010,14 +2010,14 @@ async function botPong(botPid, tile, hand, myMelds) {
   await new Promise(r => setTimeout(r, 700));
   const fresh2 = (await get(ref(db, `rooms/${roomCode}/game`))).val();
   if (fresh2?.currentTurn === botPid) {
-    await botDiscard(botPid, fresh2.hands[botPid] || [], fresh2.melds[botPid] || [], fresh2);
+    await botDiscard(botPid, (fresh2.hands || {})[botPid] || [], (fresh2.melds || {})[botPid] || [], fresh2);
   }
 }
 
 async function botKong(botPid, kongOpt, gs) {
   const tile = kongOpt.tile;
-  let hand = [...(gs.hands[botPid] || [])];
-  let melds = [...(gs.melds[botPid] || [])];
+  let hand = [...((gs.hands || {})[botPid] || [])];
+  let melds = [...((gs.melds || {})[botPid] || [])];
   const removeCount = kongOpt.type === '暗槓' ? 4 : 1;
   let removed = 0;
   hand = hand.filter(t => (t === tile && removed < removeCount) ? (removed++, false) : true);
@@ -2030,7 +2030,7 @@ async function botKong(botPid, kongOpt, gs) {
   // Draw replacement
   let wallIdx = gs.wallIndex;
   const wall = gs.wall;
-  const flowers = [...(gs.flowers[botPid] || [])];
+  const flowers = [...((gs.flowers || {})[botPid] || [])];
   let drawn = wall[wallIdx++];
   while (drawn && isFlower(drawn) && wallIdx < wall.length) { flowers.push(drawn); drawn = wall[wallIdx++]; }
   if (drawn && !isFlower(drawn)) hand.push(drawn);
@@ -2043,7 +2043,7 @@ async function botKong(botPid, kongOpt, gs) {
 }
 
 async function botChow(botPid, tile, otherTwo, myMelds, gs) {
-  const hand = [...(gs.hands[botPid] || [])];
+  const hand = [...((gs.hands || {})[botPid] || [])];
   let removals = [...otherTwo];
   const filtered = hand.filter(t => {
     const i = removals.indexOf(t);
@@ -2063,14 +2063,14 @@ async function botChow(botPid, tile, otherTwo, myMelds, gs) {
   await new Promise(r => setTimeout(r, 700));
   const fresh2 = (await get(ref(db, `rooms/${roomCode}/game`))).val();
   if (fresh2?.currentTurn === botPid) {
-    await botDiscard(botPid, fresh2.hands[botPid] || [], fresh2.melds[botPid] || [], fresh2);
+    await botDiscard(botPid, (fresh2.hands || {})[botPid] || [], (fresh2.melds || {})[botPid] || [], fresh2);
   }
 }
 
 async function botDeclareWin(botPid, isSelfDraw, gs) {
-  const hand    = gs.hands[botPid] || [];
-  const myMelds = gs.melds[botPid] || [];
-  const myFlows = gs.flowers[botPid] || [];
+  const hand    = (gs.hands || {})[botPid] || [];
+  const myMelds = (gs.melds || {})[botPid] || [];
+  const myFlows = (gs.flowers || {})[botPid] || [];
   const lastTile = gs.lastDiscard?.tile;
   const fullHand = isSelfDraw ? hand : [...hand, lastTile];
   if (!canWin(fullHand, myMelds)) return;
