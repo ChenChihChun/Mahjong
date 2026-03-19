@@ -585,8 +585,8 @@ function canPong(hand, tile) {
   return hand.filter(t => t === tile).length >= 2;
 }
 
-function canChow(hand, tile, discardedBy) {
-  const myAbsSeat = PLAYER_IDS.indexOf(myPlayerId);
+function canChow(hand, tile, discardedBy, claimerPid) {
+  const myAbsSeat = PLAYER_IDS.indexOf(claimerPid || myPlayerId);
   const leftPid   = PLAYER_IDS[(myAbsSeat + 3) % 4];
   if (discardedBy !== leftPid) return [];
   if (!tile || isFlower(tile) || tile[1] === 'z') return [];
@@ -1559,7 +1559,15 @@ async function _runBotTurnInner(gs, botPid) {
       await botPong(botPid, lastTile, botHand, botMelds);
       return;
     }
-    // 3. If this bot is the "next player" (currentTurn), it must clear lastDiscard so game proceeds
+    // 3. Chow (only if this bot is the next player)
+    if (isNextPlayer) {
+      const chowOpts = canChow(botHand, lastTile, lastBy, botPid);
+      if (chowOpts.length > 0) {
+        await botChow(botPid, lastTile, chowOpts[0], botMelds, fresh);
+        return;
+      }
+    }
+    // 4. If this bot is the "next player" (currentTurn), it must clear lastDiscard so game proceeds
     if (isNextPlayer) {
       await update(ref(db, `rooms/${roomCode}/game`), { lastDiscard: null, pendingAction: null });
     }
@@ -1669,6 +1677,27 @@ async function botPong(botPid, tile, hand, myMelds) {
     pendingAction: null,
   });
   // Then discard
+  await new Promise(r => setTimeout(r, 700));
+  const fresh2 = (await get(ref(db, `rooms/${roomCode}/game`))).val();
+  if (fresh2?.currentTurn === botPid) {
+    await botDiscard(botPid, fresh2.hands[botPid] || [], fresh2.melds[botPid] || [], fresh2);
+  }
+}
+
+async function botChow(botPid, tile, otherTwo, myMelds, gs) {
+  const hand = [...(gs.hands[botPid] || [])];
+  let removals = [...otherTwo];
+  const filtered = hand.filter(t => {
+    const i = removals.indexOf(t);
+    if (i !== -1) { removals.splice(i, 1); return false; }
+    return true;
+  });
+  const meldTiles = sortTiles([tile, ...otherTwo]);
+  const newMelds = [...myMelds, { type: '吃', tiles: meldTiles }];
+  await update(ref(db, `rooms/${roomCode}/game`), {
+    [`hands/${botPid}`]: filtered, [`melds/${botPid}`]: newMelds,
+    currentTurn: botPid, lastDiscard: null, pendingAction: null,
+  });
   await new Promise(r => setTimeout(r, 700));
   const fresh2 = (await get(ref(db, `rooms/${roomCode}/game`))).val();
   if (fresh2?.currentTurn === botPid) {

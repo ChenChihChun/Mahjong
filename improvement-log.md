@@ -9,3 +9,4 @@
 - feat: 計時器到期自動出牌 — 15s discard timer starts after drawing; auto-discards last tile on expiry
 - feat: 一炮多響 — priority-based resolution (closer to discarder wins first), prevents race condition overwrites
 - feat: calcTai add 大三元(+8台), 小三元(+4台), 碰碰胡(+4台) scoring patterns
+- feat: bot can now chow (吃) tiles from the left player, with botChow function and canChow accepting claimerPid
