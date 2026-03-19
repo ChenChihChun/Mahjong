@@ -8,3 +8,4 @@
 - feat: 搶槓胡 — when a player does 加槓, others get a 3s window to rob the kong and win
 - feat: 計時器到期自動出牌 — 15s discard timer starts after drawing; auto-discards last tile on expiry
 - feat: 一炮多響 — priority-based resolution (closer to discarder wins first), prevents race condition overwrites
+- feat: calcTai add 大三元(+8台), 小三元(+4台), 碰碰胡(+4台) scoring patterns

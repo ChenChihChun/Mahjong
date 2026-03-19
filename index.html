@@ -640,16 +640,34 @@ function calcTai(hand, melds, flowers, isSelfDraw, isDealer, wallRemaining, isFi
   else if (suits.size === 1 && honor.length === 0){ tai += 5; breakdown.push('清一色 +5台'); }
   else if (suits.size === 1)                      { tai += 3; breakdown.push('混一色 +3台'); }
 
-  ['5z','6z','7z'].forEach(d => {
-    if (allTiles.filter(t => t === d).length >= 3)
-      { tai++; breakdown.push(`三元(${tileLabel(d)}) +1台`); }
-  });
+  // 三元 (dragons)
+  const dragonCounts = ['5z','6z','7z'].map(d => allTiles.filter(t => t === d).length);
+  const dragonTrips  = dragonCounts.filter(c => c >= 3).length;
+  const dragonPairs  = dragonCounts.filter(c => c === 2).length;
+  if (dragonTrips === 3)                  { tai += 8; breakdown.push('大三元 +8台'); }
+  else if (dragonTrips === 2 && dragonPairs >= 1) { tai += 4; breakdown.push('小三元 +4台'); }
+  else {
+    ['5z','6z','7z'].forEach((d, i) => {
+      if (dragonCounts[i] >= 3) { tai++; breakdown.push(`三元(${tileLabel(d)}) +1台`); }
+    });
+  }
 
   const wc = ['1z','2z','3z','4z'].map(w => allTiles.filter(t => t === w).length);
   const wTrip = wc.filter(c => c >= 3).length;
   const wPair = wc.filter(c => c === 2).length;
   if (wTrip === 4)              { tai += 8; breakdown.push('大四喜 +8台'); }
   else if (wTrip === 3 && wPair === 1) { tai += 5; breakdown.push('小四喜 +5台'); }
+
+  // 碰碰胡 (all pungs/kongs, no sequences)
+  const allMelds = melds || [];
+  if (allMelds.every(m => m.type !== '吃')) {
+    const hc = {};
+    hand.forEach(t => { hc[t] = (hc[t] || 0) + 1; });
+    const vals = Object.values(hc);
+    if (vals.every(c => c === 2 || c === 3) && vals.filter(c => c === 2).length === 1) {
+      tai += 4; breakdown.push('碰碰胡 +4台');
+    }
+  }
 
   // Flower scoring (花牌)
   // 正花: f1-f4 (梅蘭菊竹) & f5-f8 (春夏秋冬) map to seats 0-3
