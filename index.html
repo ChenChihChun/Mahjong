@@ -392,6 +392,8 @@ let selectedTileIdx = null;
 let actionTimerInterval = null;
 let scores = { p1:0, p2:0, p3:0, p4:0 };
 let pendingChowOptions = [];
+let nextDealer = 'p1';
+let nextRound  = 1;
 
 // ============================================================
 // DOM UTILS — safe, no innerHTML with user data
@@ -1085,6 +1087,17 @@ function showWinScreen(winInfo, winnerPid) {
     scores[pid]       = (scores[pid] || 0) - pay;
   });
 
+  // 連莊: dealer stays if they won or draw; otherwise rotate
+  const curDealer = gameState?.dealer || 'p1';
+  const curRound  = gameState?.round || 1;
+  if (!winnerPid || winnerPid === curDealer) {
+    nextDealer = curDealer;  // 連莊
+    nextRound  = curRound;
+  } else {
+    nextDealer = nextPlayer(curDealer);
+    nextRound  = curRound + 1;
+  }
+
   showScreen('screen-win');
 }
 
@@ -1239,20 +1252,22 @@ async function dealAndPushGame() {
       if (idx < wall.length) hands[pid].push(wall[idx++]);
     }
   });
-  // Dealer (p1) gets one extra tile
-  while (idx < wall.length && isFlower(wall[idx])) { flowers['p1'].push(wall[idx++]); }
-  if (idx < wall.length) hands['p1'].push(wall[idx++]);
+  // Dealer gets one extra tile
+  const dealer = nextDealer || 'p1';
+  const round  = nextRound  || 1;
+  while (idx < wall.length && isFlower(wall[idx])) { flowers[dealer].push(wall[idx++]); }
+  if (idx < wall.length) hands[dealer].push(wall[idx++]);
 
   await set(ref(db, `rooms/${roomCode}/game`), {
     wall, wallIndex: idx,
     hands, flowers,
     discards: { p1:[], p2:[], p3:[], p4:[] },
     melds:    { p1:[], p2:[], p3:[], p4:[] },
-    currentTurn: 'p1',
+    currentTurn: dealer,
     lastDiscard: null,
     pendingAction: null,
-    dealer: 'p1',
-    round: 1,
+    dealer,
+    round,
     status: 'playing',
   });
 

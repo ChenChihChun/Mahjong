@@ -10,3 +10,4 @@
 - feat: 一炮多響 — priority-based resolution (closer to discarder wins first), prevents race condition overwrites
 - feat: calcTai add 大三元(+8台), 小三元(+4台), 碰碰胡(+4台) scoring patterns
 - feat: bot can now chow (吃) tiles from the left player, with botChow function and canChow accepting claimerPid
+- feat: 連莊 — dealer stays when they win or draw; rotates to next player otherwise; round number advances
