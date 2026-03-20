@@ -98,6 +98,16 @@
 - [x] 胡牌畫面顯示完整牌組（含鳴牌和花牌）
 - [x] bot 出牌核心邏輯修復 → 改用 stateKey dedup 取代 botBusy timing hack
 - [x] 遊戲應自動按圈數結束 → 按鈕顯示局數進度，超過時顯示「遊戲結束」
+- [ ] RWD-1: 手牌區 tiles overflow（nowrap+overflow-x:auto 在 640px 寬度超出）→ 縮小 tile size
+- [ ] RWD-2: 圓形動作按鈕 6 顆太寬（min(12vmin,56px)×6=超過640px）→ 縮小+允許wrap
+- [ ] RWD-3: discard-area inset 太大（avatar+22px 上下共吃 104px/360px）→ 縮小 inset
+- [ ] RWD-4: lobby 兩欄佈局在 640px 寬度壓縮 → 加 max-width 600px 以下改單欄
+- [ ] RWD-5: home 標題 3.5rem 太大 → 改 min(8vw, 3.5rem)
+- [ ] RWD-6: home 按鈕固定 220px → 改 min(220px, 80%)
+- [ ] RWD-7: win-box padding 32px 太厚 → 小螢幕改 16px
+- [ ] RWD-8: win-hand tiles 沒有限制大小 → 加 small class
+- [ ] RWD-9: timer-bar 固定 120px → 改 min(120px, 25vw)
+- [ ] RWD-10: 加入 max-width 600px media query 處理窄手機
 
 
 ## 任務執行規則
